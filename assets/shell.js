@@ -34,7 +34,7 @@
 
   /* ---------- global state ---------- */
   var state = {
-    lang:  lsGet("lang")  || "zh",
+    lang:  lsGet("lang")  || "en",       // default language: en (source is English)
     theme: lsGet("theme") || "dark"
   };
 
