@@ -6,14 +6,14 @@
    paints it into <main id="page">, wires interactions, and registers an
    onLang() callback so a language switch repaints the whole body.
 
-   Custom layouts: home | pipeline | principles | attacks | hunting |
-                   schema | practice
+   Layouts are intentionally NON-card: inline stat strips, feature rows,
+   index lists, a connected stepper, numbered editorial lists, an accordion,
+   tables and a tabbed practice panel.
    ========================================================================= */
 (function () {
   "use strict";
 
-  /* state that should survive a language-triggered repaint */
-  var practiceTab = "glossary";
+  var practiceTab = "glossary";   // survives a language-triggered repaint
 
   function boot() {
     if (!window.LDW || !window.LDW.ready) {
@@ -34,6 +34,7 @@
         esc(p.icon || "shield") + '</span><span>' + esc(t(p.title)) + "</span></div>" +
         "<h1>" + esc(t(p.title)) + "</h1>" + sub + "</header>";
     }
+    function pad2(n) { return ("0" + n).slice(-2); }
     function reveal(selector) {
       if (!("IntersectionObserver" in window)) {
         [].forEach.call(pageEl.querySelectorAll(selector), function (el) { el.classList.add("is-in"); });
@@ -47,7 +48,6 @@
       [].forEach.call(pageEl.querySelectorAll(selector), function (el) { io.observe(el); });
       teardowns.push(function () { io.disconnect(); });
     }
-    /* count-up only for integer-valued stats; others render as-is */
     function countUp(el) {
       var raw = el.dataset.count || "";
       if (!/^\d+$/.test(raw)) { el.textContent = raw; return; }
@@ -76,30 +76,30 @@
        ===================================================================== */
     var RENDERERS = {
 
-      /* ---- home / overview ---- */
+      /* ---- home: hero + stat strip + feature rows + lineage band + index list ---- */
       home: function (p) {
         var stats = (p.stats || []).map(function (s) {
-          return '<div class="kstat" data-item>' +
-            '<b class="kstat__value" data-count="' + esc(String(s.value)) + '">' + esc(String(s.value)) + "</b>" +
-            '<span class="kstat__label">' + esc(t(s.label)) + "</span></div>";
+          return '<div class="statbar__item" data-item>' +
+            '<b class="statbar__value" data-count="' + esc(String(s.value)) + '">' + esc(String(s.value)) + "</b>" +
+            '<span class="statbar__label">' + esc(t(s.label)) + "</span></div>";
         }).join("");
 
         var pitch = (p.pitch || []).map(function (c) {
-          return '<article class="pitch reveal" data-item>' +
-            '<span class="material-symbols-rounded pitch__icon" aria-hidden="true">' + esc(c.icon) + "</span>" +
-            '<h3 class="pitch__title">' + esc(t(c.title)) + "</h3>" +
-            '<p class="pitch__body">' + esc(t(c.body)) + "</p></article>";
+          return '<div class="frow reveal" data-item>' +
+            '<span class="material-symbols-rounded frow__icon" aria-hidden="true">' + esc(c.icon) + "</span>" +
+            '<div class="frow__text"><h3 class="frow__title">' + esc(t(c.title)) + "</h3>" +
+            '<p class="frow__body">' + esc(t(c.body)) + "</p></div></div>";
         }).join("");
 
         var lin = p.lineage || {};
         var metrics = (lin.metrics || []).map(function (m) {
-          return '<div class="metric" data-item><b class="metric__value">' + esc(String(m.value)) + "</b>" +
-            '<span class="metric__label">' + esc(t(m.label)) + "</span></div>";
+          return '<div class="metricbar__item" data-item><b class="metricbar__value">' + esc(String(m.value)) + "</b>" +
+            '<span class="metricbar__label">' + esc(t(m.label)) + "</span></div>";
         }).join("");
-        var lineage = '<section class="slab reveal" data-item aria-labelledby="lineageH">' +
-          '<h2 class="slab__title" id="lineageH">' + esc(t(lin.heading)) + "</h2>" +
-          '<p class="slab__body">' + esc(t(lin.body)) + "</p>" +
-          '<div class="metric-row">' + metrics + "</div>" +
+        var lineage = '<section class="band reveal" data-item aria-labelledby="lineageH">' +
+          '<h2 class="band__title" id="lineageH">' + esc(t(lin.heading)) + "</h2>" +
+          '<p class="band__body">' + esc(t(lin.body)) + "</p>" +
+          '<div class="metricbar">' + metrics + "</div>" +
           '<blockquote class="quote">' + esc(t(lin.quote)) + "</blockquote></section>";
 
         var src = p.sources || {};
@@ -108,51 +108,48 @@
             '<span class="material-symbols-rounded" aria-hidden="true">open_in_new</span>' +
             '<span>' + esc(t(a.label)) + "</span></a>";
         }).join("");
-        var sources = '<section class="slab slab--muted reveal" data-item aria-labelledby="srcH">' +
-          '<h2 class="slab__title" id="srcH">' + esc(t(src.heading)) + "</h2>" +
-          '<p class="slab__body">' + esc(t(src.note)) + "</p>" +
+        var sources = '<section class="band band--muted reveal" data-item aria-labelledby="srcH">' +
+          '<h2 class="band__title" id="srcH">' + esc(t(src.heading)) + "</h2>" +
+          '<p class="band__body">' + esc(t(src.note)) + "</p>" +
           '<div class="srclinks">' + links + "</div></section>";
 
-        var cards = L.pages.filter(function (q) { return q.slug !== "home"; }).map(function (q) {
-          return '<a class="navcard reveal" data-item href="' + esc(L.pageHref(q)) + '" aria-label="' + esc(t(q.title)) + '">' +
-            '<span class="material-symbols-rounded navcard__icon" aria-hidden="true">' + esc(q.icon || "label") + "</span>" +
-            '<span class="navcard__text"><b>' + esc(t(q.title)) + "</b>" +
+        var idx = L.pages.filter(function (q) { return q.slug !== "home"; }).map(function (q, i) {
+          return '<a class="idxrow reveal" data-item href="' + esc(L.pageHref(q)) + '" aria-label="' + esc(t(q.title)) + '">' +
+            '<span class="idxrow__n">' + pad2(i + 1) + "</span>" +
+            '<span class="material-symbols-rounded idxrow__icon" aria-hidden="true">' + esc(q.icon || "label") + "</span>" +
+            '<span class="idxrow__text"><b>' + esc(t(q.title)) + "</b>" +
             '<span>' + esc(t(q.subtitle)) + "</span></span>" +
-            '<span class="material-symbols-rounded navcard__go" aria-hidden="true">arrow_forward</span></a>';
+            '<span class="material-symbols-rounded idxrow__go" aria-hidden="true">arrow_forward</span></a>';
         }).join("");
-
         var exploreLabel = lang() === "en" ? "Explore the skill" : "逐章拆解";
 
         return '<section class="hero" data-item>' +
             '<div class="terminal" aria-hidden="true"><span class="terminal__dot"></span><span class="terminal__dot"></span><span class="terminal__dot"></span>' +
               '<code class="terminal__cmd">' + esc(p.command || "") + '<span class="terminal__caret"></span></code></div>' +
+            '<h1 class="hero__title">' + esc(t(p.subtitle)) + "</h1>" +
             '<p class="hero__lede">' + esc(t(p.lede)) + "</p>" +
-            '<div class="kstats">' + stats + "</div>" +
           "</section>" +
-          '<div class="pitch-grid">' + pitch + "</div>" +
+          '<div class="statbar">' + stats + "</div>" +
+          '<div class="flist">' + pitch + "</div>" +
           lineage +
           '<h2 class="section-label"><span class="section-label__hash">//</span> ' + esc(exploreLabel) + "</h2>" +
-          '<div class="navgrid">' + cards + "</div>" +
+          '<nav class="idxlist" aria-label="' + esc(exploreLabel) + '">' + idx + "</nav>" +
           sources;
       },
 
-      /* ---- pipeline ---- */
+      /* ---- pipeline: connected stepper ---- */
       pipeline: function (p) {
         var intro = t(p.intro) ? '<p class="lead reveal" data-item>' + esc(t(p.intro)) + "</p>" : "";
         var phases = (p.phases || []).map(function (ph) {
-          var details = (ph.detail || []).map(function (d) {
-            return "<li>" + esc(t(d)) + "</li>";
-          }).join("");
-          return '<li class="phase reveal" data-item data-phase="' + esc(ph.key) + '">' +
-            '<div class="phase__rail" aria-hidden="true"><span class="phase__num">' + esc(ph.n) + "</span></div>" +
-            '<div class="phase__card">' +
-              '<div class="phase__top">' +
-                '<h3 class="phase__name">' + esc(t(ph.name)) + "</h3>" +
-                '<span class="badge badge--agents"><span class="material-symbols-rounded" aria-hidden="true">smart_toy</span>' + esc(t(ph.agents)) + "</span>" +
-              "</div>" +
-              '<p class="phase__summary">' + esc(t(ph.summary)) + "</p>" +
-              (ph.output ? '<div class="phase__out"><span class="material-symbols-rounded" aria-hidden="true">output</span><code>' + esc(ph.output) + "</code></div>" : "") +
-              "<ul class=\"phase__detail\">" + details + "</ul>" +
+          var details = (ph.detail || []).map(function (d) { return "<li>" + esc(t(d)) + "</li>"; }).join("");
+          return '<li class="step reveal" data-item>' +
+            '<div class="step__rail" aria-hidden="true"><span class="step__num">' + esc(ph.n) + "</span></div>" +
+            '<div class="step__body">' +
+              '<div class="step__top"><h3 class="step__name">' + esc(t(ph.name)) + "</h3>" +
+                '<span class="badge badge--agents"><span class="material-symbols-rounded" aria-hidden="true">smart_toy</span>' + esc(t(ph.agents)) + "</span></div>" +
+              '<p class="step__summary">' + esc(t(ph.summary)) + "</p>" +
+              (ph.output ? '<div class="step__out"><span class="material-symbols-rounded" aria-hidden="true">output</span><code>' + esc(ph.output) + "</code></div>" : "") +
+              '<ul class="step__detail">' + details + "</ul>" +
             "</div></li>";
         }).join("");
         var cov = p.coverage || {};
@@ -160,16 +157,16 @@
           '<span class="material-symbols-rounded callout__icon" aria-hidden="true">replay</span>' +
           '<div><h3 class="callout__title">' + esc(t(cov.heading)) + "</h3>" +
           '<p class="callout__body">' + esc(t(cov.body)) + "</p></div></section>";
-        return head(p) + intro + '<ol class="phases">' + phases + "</ol>" + coverage;
+        return head(p) + intro + '<ol class="steps">' + phases + "</ol>" + coverage;
       },
 
-      /* ---- principles + severity + anti-patterns ---- */
+      /* ---- principles: numbered definition list + severity ladder + numbered anti-patterns ---- */
       principles: function (p) {
-        var pr = (p.principles || []).map(function (c) {
-          return '<article class="prin reveal" data-item>' +
-            '<span class="material-symbols-rounded prin__icon" aria-hidden="true">' + esc(c.icon) + "</span>" +
-            '<h3 class="prin__title">' + esc(t(c.title)) + "</h3>" +
-            '<p class="prin__body">' + esc(t(c.body)) + "</p></article>";
+        var pr = (p.principles || []).map(function (c, i) {
+          return '<div class="defrow reveal" data-item><span class="defrow__n">' + pad2(i + 1) + "</span>" +
+            '<span class="material-symbols-rounded defrow__icon" aria-hidden="true">' + esc(c.icon) + "</span>" +
+            '<div class="defrow__text"><h3 class="defrow__title">' + esc(t(c.title)) + "</h3>" +
+            '<p class="defrow__body">' + esc(t(c.body)) + "</p></div></div>";
         }).join("");
 
         var sev = p.severity || {};
@@ -185,20 +182,19 @@
 
         var ap = p.antipatterns || {};
         var aps = (ap.items || []).map(function (it, i) {
-          return '<article class="anti reveal" data-item>' +
-            '<span class="anti__x material-symbols-rounded" aria-hidden="true">block</span>' +
-            '<div><h3 class="anti__title">' + esc(t(it.title)) + "</h3>" +
-            '<p class="anti__body">' + esc(t(it.body)) + "</p></div></article>";
+          return '<li class="numrow reveal" data-item><span class="numrow__n numrow__n--x">' + (i + 1) + "</span>" +
+            '<div class="numrow__text"><h3 class="numrow__title">' + esc(t(it.title)) + "</h3>" +
+            '<p class="numrow__body">' + esc(t(it.body)) + "</p></div></li>";
         }).join("");
         var anti = '<section class="block reveal" aria-labelledby="apH">' +
           '<h2 class="block__title" id="apH"><span class="section-label__hash">//</span> ' + esc(t(ap.heading)) + "</h2>" +
           '<p class="block__note">' + esc(t(ap.note)) + "</p>" +
-          '<div class="anti-grid">' + aps + "</div></section>";
+          '<ol class="numlist">' + aps + "</ol></section>";
 
-        return head(p) + '<div class="prin-grid">' + pr + "</div>" + severity + anti;
+        return head(p) + '<div class="deflist">' + pr + "</div>" + severity + anti;
       },
 
-      /* ---- attacks: search + chips + cards + dialog ---- */
+      /* ---- attacks: searchable + filterable accordion ---- */
       attacks: function (p) {
         var cats = (p.categories || []).map(function (c) {
           return '<button class="chip" type="button" data-cat="' + esc(c.key) + '">' + esc(c[lang()] || c.en) + "</button>";
@@ -213,17 +209,16 @@
             '<div class="chips"><button class="chip chip--active" type="button" data-cat="">' + esc(allLabel) + "</button>" + cats + "</div>" +
           "</div>" +
           '<p class="result-count" id="resultCount" aria-live="polite"></p>' +
-          '<div class="atk-grid" id="grid"></div>';
+          '<div class="acc" id="acc"></div>';
       },
 
-      /* ---- hunting angles + validation rules ---- */
+      /* ---- hunting: numbered editorial list + validation checklist ---- */
       hunting: function (p) {
         var intro = t(p.intro) ? '<p class="lead reveal" data-item>' + esc(t(p.intro)) + "</p>" : "";
         var angles = (p.angles || []).map(function (a) {
-          return '<article class="angle reveal" data-item>' +
-            '<span class="angle__n">' + esc(a.n) + "</span>" +
-            '<h3 class="angle__title">' + esc(t(a.title)) + "</h3>" +
-            '<p class="angle__body">' + esc(t(a.body)) + "</p></article>";
+          return '<li class="numrow reveal" data-item><span class="numrow__n">' + esc(a.n) + "</span>" +
+            '<div class="numrow__text"><h3 class="numrow__title">' + esc(t(a.title)) + "</h3>" +
+            '<p class="numrow__body">' + esc(t(a.body)) + "</p></div></li>";
         }).join("");
         var rl = p.rules || {};
         var rules = (rl.items || []).map(function (it) {
@@ -233,7 +228,7 @@
         var rulesBlock = '<section class="block reveal" aria-labelledby="rulesH">' +
           '<h2 class="block__title" id="rulesH"><span class="section-label__hash">//</span> ' + esc(t(rl.heading)) + "</h2>" +
           '<ul class="rules">' + rules + "</ul></section>";
-        return head(p) + intro + '<div class="angle-grid">' + angles + "</div>" + rulesBlock;
+        return head(p) + intro + '<ol class="numlist">' + angles + "</ol>" + rulesBlock;
       },
 
       /* ---- schema: field tables + example + validator ---- */
@@ -246,9 +241,7 @@
               '<td class="fld__type"><code>' + esc(f.type) + "</code></td>" +
               '<td class="fld__desc">' + esc(t(f.desc)) + "</td></tr>";
           }).join("");
-          var heads = lang() === "en"
-            ? ["Field", "Type", "Description"]
-            : ["欄位", "型別", "說明"];
+          var heads = lang() === "en" ? ["Field", "Type", "Description"] : ["欄位", "型別", "說明"];
           return '<section class="block reveal" aria-labelledby="' + esc(group._id) + '">' +
             '<h2 class="block__title" id="' + esc(group._id) + '"><span class="section-label__hash">//</span> ' + esc(t(group.heading)) + "</h2>" +
             '<div class="table-wrap"><table class="fld-table"><thead><tr>' +
@@ -301,85 +294,74 @@
       schema: function () { reveal(".reveal"); },
 
       attacks: function (p) {
-        var grid = document.getElementById("grid");
+        var accEl = document.getElementById("acc");
         var search = document.getElementById("search");
         var count = document.getElementById("resultCount");
         var chips = [].slice.call(pageEl.querySelectorAll(".chip"));
         var st = { q: "", cat: "" };
+        var checksLabel = lang() === "en" ? "What to chase" : "重點追查";
 
         function matches(item) {
           if (st.cat && item.category !== st.cat) return false;
           if (!st.q) return true;
-          var hay = (t(item.title) + " " + t(item.summary) + " " + (item.tags || []).join(" ")).toLowerCase();
+          var hay = (t(item.title) + " " + t(item.summary) + " " + t(item.overview) + " " + (item.tags || []).join(" ")).toLowerCase();
           return hay.indexOf(st.q) !== -1;
         }
         function findItem(slug) {
           return (p.items || []).filter(function (it) { return it.slug === slug; })[0] || null;
         }
-        function paint() {
+        function build() {
           var rows = (p.items || []).filter(matches);
-          grid.innerHTML = rows.map(function (item) {
-            var tags = (item.tags || []).slice(0, 4).map(function (g) { return '<span class="tag">' + esc(g) + "</span>"; }).join("");
-            return '<article class="atk-card" tabindex="0" role="button" data-item data-slug="' + esc(item.slug) + '" aria-label="' + esc(t(item.title)) + '">' +
-              '<span class="material-symbols-rounded atk-card__icon" aria-hidden="true">' + esc(item.icon || "swords") + "</span>" +
-              '<h3 class="atk-card__title">' + esc(t(item.title)) + "</h3>" +
-              '<p class="atk-card__summary">' + esc(t(item.summary)) + "</p>" +
-              (tags ? '<div class="card__tags">' + tags + "</div>" : "") + "</article>";
+          accEl.innerHTML = rows.map(function (item) {
+            var tags = (item.tags || []).slice(0, 5).map(function (g) { return '<span class="tag">' + esc(g) + "</span>"; }).join("");
+            var checks = (item.checks || []).map(function (c) { return "<li>" + esc(t(c)) + "</li>"; }).join("");
+            return '<details class="acc-item" data-item data-slug="' + esc(item.slug) + '">' +
+              '<summary class="acc-sum">' +
+                '<span class="material-symbols-rounded acc-sum__icon" aria-hidden="true">' + esc(item.icon || "swords") + "</span>" +
+                '<span class="acc-sum__text"><b class="acc-sum__title">' + esc(t(item.title)) + "</b>" +
+                '<span class="acc-sum__desc">' + esc(t(item.summary)) + "</span></span>" +
+                '<span class="material-symbols-rounded acc-chevron" aria-hidden="true">expand_more</span>' +
+              "</summary>" +
+              '<div class="acc-body">' +
+                (tags ? '<div class="card__tags">' + tags + "</div>" : "") +
+                "<p>" + esc(t(item.overview)) + "</p>" +
+                (checks ? '<h4 class="acc-sub">' + esc(checksLabel) + "</h4><ul class=\"acc-list\">" + checks + "</ul>" : "") +
+              "</div></details>";
           }).join("");
           if (count) count.textContent = rows.length + (lang() === "en" ? " class(es)" : " 個類別");
-          wireCards();
+          wireToggles();
         }
-        function wireCards() {
-          [].forEach.call(grid.querySelectorAll(".atk-card[data-slug]"), function (card) {
-            var slug = card.dataset.slug;
-            card.addEventListener("click", function () { openItem(slug); });
-            card.addEventListener("keydown", function (e) {
-              if (e.key === "Enter" || e.key === " ") { e.preventDefault(); openItem(slug); }
+        function wireToggles() {
+          [].forEach.call(accEl.querySelectorAll(".acc-item"), function (d) {
+            d.addEventListener("toggle", function () {
+              if (d.open) {
+                var slug = d.getAttribute("data-slug");
+                if (location.hash.slice(1) !== slug) history.replaceState(null, "", "#" + slug);
+              }
             });
           });
         }
-        function openItem(slug) {
-          var item = findItem(slug); if (!item) return;
-          var dlg = L.dialog(), body = document.getElementById("dialogBody");
-          var tags = (item.tags || []).map(function (g) { return '<span class="tag">' + esc(g) + "</span>"; }).join("");
-          var checks = (item.checks || []).map(function (c) { return "<li>" + esc(t(c)) + "</li>"; }).join("");
-          var checksLabel = lang() === "en" ? "What to chase" : "重點追查";
-          body.innerHTML =
-            '<div class="dlg-head"><span class="material-symbols-rounded dlg-head__icon" aria-hidden="true">' + esc(item.icon || "swords") + "</span>" +
-            '<h2 id="dialogTitle">' + esc(t(item.title)) + "</h2></div>" +
-            (tags ? '<div class="card__tags">' + tags + "</div>" : "") +
-            "<p>" + esc(t(item.overview)) + "</p>" +
-            (checks ? '<h3 class="dlg-sub">' + esc(checksLabel) + "</h3><ul class=\"dlg-list\">" + checks + "</ul>" : "");
-          if (!dlg.open) dlg.showModal();
-          if (location.hash.slice(1) !== slug) history.replaceState(null, "", "#" + slug);
-        }
-        function syncHash() {
+        function openFromHash() {
           var slug = location.hash.slice(1);
-          if (slug && findItem(slug)) openItem(slug);
+          if (!slug || !findItem(slug)) return;
+          var d = accEl.querySelector('.acc-item[data-slug="' + slug + '"]');
+          if (d) { d.open = true; d.scrollIntoView({ block: "center" }); }
         }
-        if (search) search.addEventListener("input", function () { st.q = this.value.trim().toLowerCase(); paint(); });
+        if (search) search.addEventListener("input", function () { st.q = this.value.trim().toLowerCase(); build(); });
         chips.forEach(function (chip) {
           chip.addEventListener("click", function () {
             chips.forEach(function (c) { c.classList.remove("chip--active"); });
             chip.classList.add("chip--active");
             st.cat = chip.dataset.cat || "";
-            paint();
+            build();
           });
         });
-        var dlg = L.dialog();
-        function onClose() {
-          var slug = location.hash.slice(1);
-          if (slug && findItem(slug)) history.replaceState(null, "", location.pathname + location.search);
-        }
-        dlg.addEventListener("close", onClose);
-        var onHash = function () { syncHash(); };
+        var onHash = function () { openFromHash(); };
         window.addEventListener("hashchange", onHash);
-        teardowns.push(function () {
-          window.removeEventListener("hashchange", onHash);
-          dlg.removeEventListener("close", onClose);
-        });
-        paint();
-        syncHash();
+        teardowns.push(function () { window.removeEventListener("hashchange", onHash); });
+        build();
+        openFromHash();
+        reveal(".acc-item");
       },
 
       practice: function (p) {
@@ -387,7 +369,7 @@
         var btns = [].slice.call(pageEl.querySelectorAll(".seg__btn"));
 
         function renderGlossary() {
-          var box =
+          panel.innerHTML =
             '<div class="toolbar"><div class="search-wrap"><span class="material-symbols-rounded search-ic" aria-hidden="true">search</span>' +
             '<input id="gloSearch" class="search" type="search" autocomplete="off" placeholder="' +
               (lang() === "en" ? "Search terms…" : "搜尋術語…") + '" aria-label="' + (lang() === "en" ? "Search" : "搜尋") + '" /></div></div>' +
@@ -399,7 +381,6 @@
                 '<span class="material-symbols-rounded glo__chev" aria-hidden="true">expand_more</span></summary>' +
                 '<p class="glo__def">' + esc(t(g.def)) + "</p></details>";
             }).join("") + "</div>";
-          panel.innerHTML = box;
           var s = document.getElementById("gloSearch");
           var items = [].slice.call(panel.querySelectorAll(".glo"));
           if (s) s.addEventListener("input", function () {
@@ -490,9 +471,7 @@
           else if (tab === "quiz") renderQuiz();
           else renderGlossary();
         }
-        btns.forEach(function (b) {
-          b.addEventListener("click", function () { show(b.dataset.tab); });
-        });
+        btns.forEach(function (b) { b.addEventListener("click", function () { show(b.dataset.tab); }); });
         show(practiceTab);
       }
     };
