@@ -77,6 +77,14 @@ window.SITE_PAGES = [
         { value: "7,245",label: { en: "Final actionable findings",    zh: "最終可處理發現數" } },
         { value: "40→11%",label:{ en: "False-positive rejection rate", zh: "誤報拒絕率變化" } }
       ],
+      funnel: {
+        heading: { en: "How 20,799 candidates became 7,245 findings", zh: "20,799 個候選如何收斂成 7,245 筆發現" },
+        steps: [
+          { value: 20799, label: { en: "Raw candidates", zh: "原始候選" } },
+          { value: 12057, label: { en: "Survived VDH validation", zh: "通過 VDH 驗證" } },
+          { value: 7245,  label: { en: "Final actionable findings", zh: "最終可處理發現" } }
+        ]
+      },
       quote: {
         en: "\"The harness is the bit that lasts.\" Models are swappable components; the orchestration is the durable asset. Start with a skill, get the prompts right, and only build the next stage when not having it is the specific thing slowing you down.",
         zh: "「真正會留下來的是 harness。」模型是可替換的零件,編排才是耐久的資產。先從一個 skill 開始,把 prompt 調好,等到「缺了下一個架構階段」真的成為瓶頸時,再去建它。"
