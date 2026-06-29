@@ -114,7 +114,17 @@
     /* footer */
     var footer = document.createElement("footer");
     footer.className = "footer";
-    footer.innerHTML = '<p id="footerText"></p>';
+    footer.innerHTML =
+      '<div class="footer__inner">' +
+        '<p class="footer__text" id="footerText"></p>' +
+        '<div class="footer__links">' +
+          '<a class="footer__btn" id="homeLink" href="https://www.peteraim.com" target="_blank" rel="noopener">' +
+            '<span class="material-symbols-rounded">home</span><span id="homeLinkTxt"></span></a>' +
+          '<a class="footer__btn" href="https://www.linkedin.com/in/ai-med/" target="_blank" rel="noopener" aria-label="LinkedIn (opens in new tab)">' +
+            '<svg viewBox="0 0 24 24" width="17" height="17" fill="currentColor" aria-hidden="true"><path d="M20.45 20.45h-3.55v-5.57c0-1.33-.02-3.04-1.85-3.04-1.85 0-2.13 1.45-2.13 2.94v5.67H9.36V9h3.41v1.56h.05c.47-.9 1.63-1.85 3.36-1.85 3.6 0 4.27 2.37 4.27 5.45v6.29zM5.34 7.43a2.06 2.06 0 1 1 0-4.12 2.06 2.06 0 0 1 0 4.12zM7.12 20.45H3.56V9h3.56v11.45zM22.22 0H1.77C.79 0 0 .77 0 1.72v20.56C0 23.23.79 24 1.77 24h20.45c.98 0 1.78-.77 1.78-1.72V1.72C24 .77 23.2 0 22.22 0z"/></svg>' +
+            '<span>LinkedIn</span></a>' +
+        '</div>' +
+      '</div>';
     main.parentNode.insertBefore(footer, main.nextSibling);
 
     /* shared detail dialog (used by card layouts) */
@@ -174,6 +184,10 @@
     if (brand) brand.textContent = siteTitle;
     var foot = document.getElementById("footerText");
     if (foot) foot.textContent = "© " + new Date().getFullYear() + " " + siteTitle;
+    var homeTxt = document.getElementById("homeLinkTxt");
+    if (homeTxt) homeTxt.textContent = state.lang === "zh" ? "回 peteraim.com 首頁" : "peteraim.com home";
+    var homeLink = document.getElementById("homeLink");
+    if (homeLink) homeLink.setAttribute("aria-label", state.lang === "zh" ? "返回 peteraim.com 首頁(開新分頁)" : "Back to peteraim.com home (opens in new tab)");
     var skip = document.getElementById("skipLink");
     if (skip) skip.textContent = ui("skip");
     var nav = document.getElementById("pageNav");

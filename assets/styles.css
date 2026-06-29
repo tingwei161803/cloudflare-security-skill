@@ -366,7 +366,14 @@ code,pre { font-family:var(--font-mono); }
 .quiz-explain { margin:14px 0 0; padding:12px 16px; background:var(--surface-container-high); border-radius:var(--radius-sm); font-size:.9rem; line-height:1.6; color:var(--on-surface); }
 
 /* ---- Footer ---- */
-.footer { text-align:center; padding:40px 18px; margin-top:48px; color:var(--on-surface-variant); font-size:.82rem; font-family:var(--font-mono); border-top:1px solid var(--outline-variant); }
+.footer { border-top:1px solid var(--outline-variant); margin-top:48px; }
+.footer__inner { max-width:1080px; margin:0 auto; padding:26px 18px 48px; display:flex; align-items:center; justify-content:space-between; gap:16px; flex-wrap:wrap; }
+.footer__text { margin:0; color:var(--on-surface-variant); font-size:.82rem; font-family:var(--font-mono); }
+.footer__links { display:flex; gap:10px; flex-wrap:wrap; }
+.footer__btn { display:inline-flex; align-items:center; gap:7px; padding:9px 15px; border-radius:var(--radius-lg); border:1px solid var(--outline-variant); color:var(--on-surface-variant); font-size:.85rem; font-weight:600; transition:border-color .15s,color .15s,background .15s; }
+.footer__btn:hover { border-color:var(--primary); color:var(--primary); background:var(--surface-container); }
+.footer__btn .material-symbols-rounded { font-size:18px; }
+@media (max-width:560px) { .footer__inner { flex-direction:column; align-items:flex-start; } }
 
 /* ---- Responsive ---- */
 @media (max-width:680px) {
