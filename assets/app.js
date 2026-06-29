@@ -1,14 +1,15 @@
 /* =========================================================================
    app.js — page-level rendering engine (vanilla, no build).
 
-   shell.js has already injected the shared chrome and published window.LDW.
-   This script picks a renderer from RENDERERS by the current page's `layout`,
-   paints it into <main id="page">, wires interactions, and registers an
-   onLang() callback so a language switch repaints the whole body.
-
-   Layouts are intentionally NON-card: inline stat strips, feature rows,
-   index lists, a connected stepper, numbered editorial lists, an accordion,
-   tables and a tabbed practice panel.
+   Every page has its OWN distinct layout, each inspired by a different
+   reference from the lazy-data2web resource lists:
+     home       → landing bands + funnel chart   (Lapa Ninja / Land-book)
+     pipeline   → horizontal flow diagram         (TimelineJS / process-flow)
+     principles → editorial + severity ladder      (SiteInspire / data-viz)
+     attacks    → category-grouped accordion       (HyperUI / Preline)
+     hunting    → console / terminal transcript     (CodeStitch / terminal UI)
+     schema     → two-pane API reference            (shadcn/ui blocks)
+     practice   → lifted tabs playground            (DaisyUI)
    ========================================================================= */
 (function () {
   "use strict";
@@ -26,7 +27,6 @@
     var pageEl = document.getElementById("page");
     var teardowns = [];
 
-    /* ---------- shared bits ---------- */
     function head(p) {
       var sub = t(p.subtitle)
         ? '<p class="page-head__sub">' + esc(t(p.subtitle)) + "</p>" : "";
@@ -35,6 +35,7 @@
         "<h1>" + esc(t(p.title)) + "</h1>" + sub + "</header>";
     }
     function pad2(n) { return ("0" + n).slice(-2); }
+    function commas(n) { return String(n).replace(/\B(?=(\d{3})+(?!\d))/g, ","); }
     function reveal(selector) {
       if (!("IntersectionObserver" in window)) {
         [].forEach.call(pageEl.querySelectorAll(selector), function (el) { el.classList.add("is-in"); });
@@ -44,7 +45,7 @@
         entries.forEach(function (en) {
           if (en.isIntersecting) { en.target.classList.add("is-in"); io.unobserve(en.target); }
         });
-      }, { threshold: 0.12 });
+      }, { threshold: 0.1 });
       [].forEach.call(pageEl.querySelectorAll(selector), function (el) { io.observe(el); });
       teardowns.push(function () { io.disconnect(); });
     }
@@ -71,12 +72,9 @@
       teardowns.push(function () { io.disconnect(); });
     }
 
-    /* =====================================================================
-       LAYOUT REGISTRY
-       ===================================================================== */
     var RENDERERS = {
 
-      /* ---- home: hero + stat strip + feature rows + lineage band + index list ---- */
+      /* ============ HOME — landing bands + funnel chart ============ */
       home: function (p) {
         var stats = (p.stats || []).map(function (s) {
           return '<div class="statbar__item" data-item>' +
@@ -84,21 +82,32 @@
             '<span class="statbar__label">' + esc(t(s.label)) + "</span></div>";
         }).join("");
 
-        var pitch = (p.pitch || []).map(function (c) {
-          return '<div class="frow reveal" data-item>' +
-            '<span class="material-symbols-rounded frow__icon" aria-hidden="true">' + esc(c.icon) + "</span>" +
-            '<div class="frow__text"><h3 class="frow__title">' + esc(t(c.title)) + "</h3>" +
-            '<p class="frow__body">' + esc(t(c.body)) + "</p></div></div>";
+        var pitch = (p.pitch || []).map(function (c, i) {
+          return '<div class="fband reveal' + (i % 2 ? " fband--alt" : "") + '" data-item><div class="fband__inner">' +
+            '<span class="material-symbols-rounded fband__icon" aria-hidden="true">' + esc(c.icon) + "</span>" +
+            '<div class="fband__text"><h3 class="fband__title">' + esc(t(c.title)) + "</h3>" +
+            '<p class="fband__body">' + esc(t(c.body)) + "</p></div></div></div>";
         }).join("");
+        var whatLabel = lang() === "en" ? "What it does" : "它在做什麼";
 
         var lin = p.lineage || {};
         var metrics = (lin.metrics || []).map(function (m) {
-          return '<div class="metricbar__item" data-item><b class="metricbar__value">' + esc(String(m.value)) + "</b>" +
+          return '<div class="metricbar__item"><b class="metricbar__value">' + esc(String(m.value)) + "</b>" +
             '<span class="metricbar__label">' + esc(t(m.label)) + "</span></div>";
         }).join("");
+        var fn = lin.funnel || {};
+        var fmax = Math.max.apply(null, (fn.steps || []).map(function (s) { return s.value; }).concat([1]));
+        var funnel = (fn.steps && fn.steps.length) ? '<div class="funnel" data-item>' +
+          '<div class="funnel__h">' + esc(t(fn.heading)) + "</div>" +
+          fn.steps.map(function (s) {
+            var pct = Math.max(8, Math.round(s.value / fmax * 100));
+            return '<div class="funnel__row"><span class="funnel__label">' + esc(t(s.label)) + "</span>" +
+              '<div class="funnel__track"><div class="funnel__bar" style="width:' + pct + '%">' +
+              '<span class="funnel__val">' + commas(s.value) + "</span></div></div></div>";
+          }).join("") + "</div>" : "";
         var lineage = '<section class="band reveal" data-item aria-labelledby="lineageH">' +
           '<h2 class="band__title" id="lineageH">' + esc(t(lin.heading)) + "</h2>" +
-          '<p class="band__body">' + esc(t(lin.body)) + "</p>" +
+          '<p class="band__body">' + esc(t(lin.body)) + "</p>" + funnel +
           '<div class="metricbar">' + metrics + "</div>" +
           '<blockquote class="quote">' + esc(t(lin.quote)) + "</blockquote></section>";
 
@@ -130,71 +139,84 @@
             '<p class="hero__lede">' + esc(t(p.lede)) + "</p>" +
           "</section>" +
           '<div class="statbar">' + stats + "</div>" +
-          '<div class="flist">' + pitch + "</div>" +
+          '<h2 class="section-label"><span class="section-label__hash">//</span> ' + esc(whatLabel) + "</h2>" +
+          '<div class="fbands">' + pitch + "</div>" +
           lineage +
           '<h2 class="section-label"><span class="section-label__hash">//</span> ' + esc(exploreLabel) + "</h2>" +
           '<nav class="idxlist" aria-label="' + esc(exploreLabel) + '">' + idx + "</nav>" +
           sources;
       },
 
-      /* ---- pipeline: connected stepper ---- */
+      /* ============ PIPELINE — horizontal flow diagram + stage blocks ============ */
       pipeline: function (p) {
         var intro = t(p.intro) ? '<p class="lead reveal" data-item>' + esc(t(p.intro)) + "</p>" : "";
-        var phases = (p.phases || []).map(function (ph) {
+        var phases = p.phases || [];
+        var flow = '<div class="flow" role="list" aria-label="pipeline">' + phases.map(function (ph, i) {
+          var arrow = i < phases.length - 1 ? '<span class="flow__arrow material-symbols-rounded" aria-hidden="true">chevron_right</span>' : "";
+          return '<a class="flow__node" role="listitem" href="#stage-' + esc(ph.key) + '">' +
+            '<span class="flow__num">' + esc(ph.n) + "</span>" +
+            '<span class="flow__label">' + esc(t(ph.name)) + "</span></a>" + arrow;
+        }).join("") + "</div>";
+
+        var stages = phases.map(function (ph) {
           var details = (ph.detail || []).map(function (d) { return "<li>" + esc(t(d)) + "</li>"; }).join("");
-          return '<li class="step reveal" data-item>' +
-            '<div class="step__rail" aria-hidden="true"><span class="step__num">' + esc(ph.n) + "</span></div>" +
-            '<div class="step__body">' +
-              '<div class="step__top"><h3 class="step__name">' + esc(t(ph.name)) + "</h3>" +
-                '<span class="badge badge--agents"><span class="material-symbols-rounded" aria-hidden="true">smart_toy</span>' + esc(t(ph.agents)) + "</span></div>" +
-              '<p class="step__summary">' + esc(t(ph.summary)) + "</p>" +
-              (ph.output ? '<div class="step__out"><span class="material-symbols-rounded" aria-hidden="true">output</span><code>' + esc(ph.output) + "</code></div>" : "") +
-              '<ul class="step__detail">' + details + "</ul>" +
-            "</div></li>";
+          return '<section class="stage reveal" id="stage-' + esc(ph.key) + '" data-item>' +
+            '<div class="stage__head"><span class="stage__num">' + esc(ph.n) + "</span>" +
+              '<h3 class="stage__name">' + esc(t(ph.name)) + "</h3>" +
+              '<span class="badge badge--agents"><span class="material-symbols-rounded" aria-hidden="true">smart_toy</span>' + esc(t(ph.agents)) + "</span></div>" +
+            '<p class="stage__summary">' + esc(t(ph.summary)) + "</p>" +
+            (ph.output ? '<div class="step__out"><span class="material-symbols-rounded" aria-hidden="true">output</span><code>' + esc(ph.output) + "</code></div>" : "") +
+            '<ul class="stage__detail">' + details + "</ul></section>";
         }).join("");
+
         var cov = p.coverage || {};
         var coverage = '<section class="callout reveal" data-item>' +
           '<span class="material-symbols-rounded callout__icon" aria-hidden="true">replay</span>' +
           '<div><h3 class="callout__title">' + esc(t(cov.heading)) + "</h3>" +
           '<p class="callout__body">' + esc(t(cov.body)) + "</p></div></section>";
-        return head(p) + intro + '<ol class="steps">' + phases + "</ol>" + coverage;
+        return head(p) + intro + flow + '<div class="stages">' + stages + "</div>" + coverage;
       },
 
-      /* ---- principles: numbered definition list + severity ladder + numbered anti-patterns ---- */
+      /* ============ PRINCIPLES — editorial + severity ladder + anti-patterns ============ */
       principles: function (p) {
         var pr = (p.principles || []).map(function (c, i) {
-          return '<div class="defrow reveal" data-item><span class="defrow__n">' + pad2(i + 1) + "</span>" +
-            '<span class="material-symbols-rounded defrow__icon" aria-hidden="true">' + esc(c.icon) + "</span>" +
-            '<div class="defrow__text"><h3 class="defrow__title">' + esc(t(c.title)) + "</h3>" +
-            '<p class="defrow__body">' + esc(t(c.body)) + "</p></div></div>";
+          return '<article class="pred reveal" data-item>' +
+            '<span class="pred__num" aria-hidden="true">' + pad2(i + 1) + "</span>" +
+            '<div class="pred__main">' +
+              '<span class="material-symbols-rounded pred__icon" aria-hidden="true">' + esc(c.icon) + "</span>" +
+              '<h3 class="pred__title">' + esc(t(c.title)) + "</h3>" +
+              '<p class="pred__body">' + esc(t(c.body)) + "</p></div></article>";
         }).join("");
 
         var sev = p.severity || {};
+        var widths = { critical: 100, high: 78, medium: 54, low: 32 };
         var levels = (sev.levels || []).map(function (lv) {
-          return '<div class="sev sev--' + esc(lv.level) + '" data-item>' +
-            '<span class="sev__tag">' + esc(t(lv.label)) + "</span>" +
-            '<p class="sev__body">' + esc(t(lv.body)) + "</p></div>";
+          var w = widths[lv.level] || 50;
+          return '<div class="sevl sevl--' + esc(lv.level) + '" data-item>' +
+            '<div class="sevl__bar" style="width:' + w + '%"><span class="sevl__tag">' + esc(t(lv.label)) + "</span></div>" +
+            '<p class="sevl__body">' + esc(t(lv.body)) + "</p></div>";
         }).join("");
         var severity = '<section class="block reveal" aria-labelledby="sevH">' +
           '<h2 class="block__title" id="sevH"><span class="section-label__hash">//</span> ' + esc(t(sev.heading)) + "</h2>" +
           '<p class="block__note">' + esc(t(sev.note)) + "</p>" +
-          '<div class="sev-ladder">' + levels + "</div></section>";
+          '<div class="sevladder">' + levels + "</div></section>";
 
         var ap = p.antipatterns || {};
-        var aps = (ap.items || []).map(function (it, i) {
-          return '<li class="numrow reveal" data-item><span class="numrow__n numrow__n--x">' + (i + 1) + "</span>" +
-            '<div class="numrow__text"><h3 class="numrow__title">' + esc(t(it.title)) + "</h3>" +
-            '<p class="numrow__body">' + esc(t(it.body)) + "</p></div></li>";
+        var aps = (ap.items || []).map(function (it) {
+          return '<li class="anti2 reveal" data-item>' +
+            '<span class="anti2__x material-symbols-rounded" aria-hidden="true">block</span>' +
+            '<div class="anti2__text"><h3 class="anti2__title">' + esc(t(it.title)) + "</h3>" +
+            '<p class="anti2__body">' + esc(t(it.body)) + "</p></div></li>";
         }).join("");
         var anti = '<section class="block reveal" aria-labelledby="apH">' +
           '<h2 class="block__title" id="apH"><span class="section-label__hash">//</span> ' + esc(t(ap.heading)) + "</h2>" +
           '<p class="block__note">' + esc(t(ap.note)) + "</p>" +
-          '<ol class="numlist">' + aps + "</ol></section>";
+          '<ol class="anti2list">' + aps + "</ol></section>";
 
-        return head(p) + '<div class="deflist">' + pr + "</div>" + severity + anti;
+        return head(p) + '<div class="predlist">' + pr + "</div>" + severity + anti;
       },
 
-      /* ---- attacks: searchable + filterable accordion ---- */
+      /* ============ ATTACKS — category-grouped accordion ============ */
       attacks: function (p) {
         var cats = (p.categories || []).map(function (c) {
           return '<button class="chip" type="button" data-cat="' + esc(c.key) + '">' + esc(c[lang()] || c.en) + "</button>";
@@ -209,48 +231,63 @@
             '<div class="chips"><button class="chip chip--active" type="button" data-cat="">' + esc(allLabel) + "</button>" + cats + "</div>" +
           "</div>" +
           '<p class="result-count" id="resultCount" aria-live="polite"></p>' +
-          '<div class="acc" id="acc"></div>';
+          '<div id="accWrap"></div>';
       },
 
-      /* ---- hunting: numbered editorial list + validation checklist ---- */
+      /* ============ HUNTING — console transcript ============ */
       hunting: function (p) {
         var intro = t(p.intro) ? '<p class="lead reveal" data-item>' + esc(t(p.intro)) + "</p>" : "";
-        var angles = (p.angles || []).map(function (a) {
-          return '<li class="numrow reveal" data-item><span class="numrow__n">' + esc(a.n) + "</span>" +
-            '<div class="numrow__text"><h3 class="numrow__title">' + esc(t(a.title)) + "</h3>" +
-            '<p class="numrow__body">' + esc(t(a.body)) + "</p></div></li>";
+        var lines = (p.angles || []).map(function (a) {
+          return '<div class="cline reveal" data-item>' +
+            '<span class="cline__prompt" aria-hidden="true">▸</span>' +
+            '<span class="cline__n">' + esc(a.n) + "</span>" +
+            '<div class="cline__text"><b class="cline__title">' + esc(t(a.title)) + "</b>" +
+            '<p class="cline__body">' + esc(t(a.body)) + "</p></div></div>";
         }).join("");
+        var con = '<div class="console" data-item>' +
+          '<div class="console__bar" aria-hidden="true"><span class="terminal__dot"></span><span class="terminal__dot"></span><span class="terminal__dot"></span>' +
+          '<span class="console__name">hunt --angles</span></div>' +
+          '<div class="console__body">' + lines + "</div></div>";
+
         var rl = p.rules || {};
         var rules = (rl.items || []).map(function (it) {
-          return '<li class="rule" data-item><span class="material-symbols-rounded rule__check" aria-hidden="true">check_circle</span>' +
+          return '<li class="ccheck" data-item><span class="ccheck__box" aria-hidden="true">[<span class="ccheck__tick">✓</span>]</span>' +
             "<span>" + esc(t(it)) + "</span></li>";
         }).join("");
         var rulesBlock = '<section class="block reveal" aria-labelledby="rulesH">' +
           '<h2 class="block__title" id="rulesH"><span class="section-label__hash">//</span> ' + esc(t(rl.heading)) + "</h2>" +
-          '<ul class="rules">' + rules + "</ul></section>";
-        return head(p) + intro + '<ol class="numlist">' + angles + "</ol>" + rulesBlock;
+          '<ul class="cchecks">' + rules + "</ul></section>";
+        return head(p) + intro + con + rulesBlock;
       },
 
-      /* ---- schema: field tables + example + validator ---- */
+      /* ============ SCHEMA — two-pane API reference ============ */
       schema: function (p) {
         var intro = t(p.intro) ? '<p class="lead reveal" data-item>' + esc(t(p.intro)) + "</p>" : "";
+        var conf = p.confirmed || {}, fields = conf.fields || [];
+        var index = fields.map(function (f) {
+          return '<a class="apiref__link" href="#f-' + esc(f.name) + '"><code>' + esc(f.name) + "</code></a>";
+        }).join("");
+        var docs = fields.map(function (f) {
+          return '<div class="fielddoc reveal" id="f-' + esc(f.name) + '" data-item>' +
+            '<div class="fielddoc__head"><code class="fielddoc__name">' + esc(f.name) + "</code>" +
+            '<code class="fielddoc__type">' + esc(f.type) + "</code></div>" +
+            '<p class="fielddoc__desc">' + esc(t(f.desc)) + "</p></div>";
+        }).join("");
+        var idxLabel = lang() === "en" ? "Fields" : "欄位";
+        var apiref = '<section class="block" aria-labelledby="cfH">' +
+          '<h2 class="block__title" id="cfH"><span class="section-label__hash">//</span> ' + esc(t(conf.heading)) + "</h2>" +
+          '<div class="apiref"><nav class="apiref__index" aria-label="' + esc(idxLabel) + '"><span class="apiref__idxh">' + esc(idxLabel) + "</span>" + index + "</nav>" +
+          '<div class="apiref__main">' + docs + "</div></div></section>";
 
-        function fieldTable(group) {
-          var rows = (group.fields || []).map(function (f) {
-            return '<tr data-item><td class="fld__name"><code>' + esc(f.name) + "</code></td>" +
-              '<td class="fld__type"><code>' + esc(f.type) + "</code></td>" +
-              '<td class="fld__desc">' + esc(t(f.desc)) + "</td></tr>";
-          }).join("");
-          var heads = lang() === "en" ? ["Field", "Type", "Description"] : ["欄位", "型別", "說明"];
-          return '<section class="block reveal" aria-labelledby="' + esc(group._id) + '">' +
-            '<h2 class="block__title" id="' + esc(group._id) + '"><span class="section-label__hash">//</span> ' + esc(t(group.heading)) + "</h2>" +
-            '<div class="table-wrap"><table class="fld-table"><thead><tr>' +
-              "<th>" + esc(heads[0]) + "</th><th>" + esc(heads[1]) + "</th><th>" + esc(heads[2]) + "</th>" +
-            "</tr></thead><tbody>" + rows + "</tbody></table></div></section>";
-        }
-
-        var confirmed = p.confirmed ? fieldTable({ _id: "cfH", heading: p.confirmed.heading, fields: p.confirmed.fields }) : "";
-        var rejected = p.rejected ? fieldTable({ _id: "rjH", heading: p.rejected.heading, fields: p.rejected.fields }) : "";
+        var rej = p.rejected || {};
+        var rdocs = (rej.fields || []).map(function (f) {
+          return '<div class="fielddoc reveal" data-item><div class="fielddoc__head"><code class="fielddoc__name">' + esc(f.name) + "</code>" +
+            '<code class="fielddoc__type">' + esc(f.type) + "</code></div>" +
+            '<p class="fielddoc__desc">' + esc(t(f.desc)) + "</p></div>";
+        }).join("");
+        var rejected = '<section class="block reveal" aria-labelledby="rjH">' +
+          '<h2 class="block__title" id="rjH"><span class="section-label__hash">//</span> ' + esc(t(rej.heading)) + "</h2>" +
+          '<div class="fieldcol">' + rdocs + "</div></section>";
 
         var ex = p.example || {};
         var example = '<section class="block reveal" aria-labelledby="exH">' +
@@ -266,26 +303,25 @@
           (v.command ? '<div class="cmdline"><span class="cmdline__prompt">$</span><code>' + esc(v.command) + "</code></div>" : "") +
           "</div></section>";
 
-        return head(p) + intro + confirmed + rejected + example + validator;
+        return head(p) + intro + apiref + rejected + example + validator;
       },
 
-      /* ---- practice: glossary + flashcards + quiz ---- */
+      /* ============ PRACTICE — lifted tabs ============ */
       practice: function (p) {
         var tabs = p.tabs || {};
+        var icons = { glossary: "menu_book", flashcards: "style", quiz: "quiz" };
         function seg(key) {
-          return '<button class="seg__btn' + (practiceTab === key ? " seg__btn--active" : "") +
+          return '<button class="ltab' + (practiceTab === key ? " ltab--active" : "") +
             '" type="button" role="tab" aria-selected="' + (practiceTab === key) + '" data-tab="' + key + '">' +
-            esc(t(tabs[key])) + "</button>";
+            '<span class="material-symbols-rounded" aria-hidden="true">' + icons[key] + "</span>" + esc(t(tabs[key])) + "</button>";
         }
         return head(p) +
-          '<div class="seg" role="tablist">' + seg("glossary") + seg("flashcards") + seg("quiz") + "</div>" +
-          '<div id="practicePanel" data-item></div>';
+          '<div class="ltabs" role="tablist">' + seg("glossary") + seg("flashcards") + seg("quiz") + "</div>" +
+          '<div id="practicePanel" class="ltabpanel" data-item></div>';
       }
     };
 
-    /* =====================================================================
-       WIRING
-       ===================================================================== */
+    /* ===================== WIRING ===================== */
     var WIRE = {
       home: function () { wireCounters(); reveal(".reveal"); },
       pipeline: function () { reveal(".reveal"); },
@@ -294,15 +330,14 @@
       schema: function () { reveal(".reveal"); },
 
       attacks: function (p) {
-        var accEl = document.getElementById("acc");
+        var wrap = document.getElementById("accWrap");
         var search = document.getElementById("search");
         var count = document.getElementById("resultCount");
         var chips = [].slice.call(pageEl.querySelectorAll(".chip"));
         var st = { q: "", cat: "" };
         var checksLabel = lang() === "en" ? "What to chase" : "重點追查";
 
-        function matches(item) {
-          if (st.cat && item.category !== st.cat) return false;
+        function matchesQ(item) {
           if (!st.q) return true;
           var hay = (t(item.title) + " " + t(item.summary) + " " + t(item.overview) + " " + (item.tags || []).join(" ")).toLowerCase();
           return hay.indexOf(st.q) !== -1;
@@ -310,29 +345,41 @@
         function findItem(slug) {
           return (p.items || []).filter(function (it) { return it.slug === slug; })[0] || null;
         }
+        function itemHTML(item) {
+          var tags = (item.tags || []).slice(0, 5).map(function (g) { return '<span class="tag">' + esc(g) + "</span>"; }).join("");
+          var checks = (item.checks || []).map(function (c) { return "<li>" + esc(t(c)) + "</li>"; }).join("");
+          return '<details class="acc-item" data-item data-slug="' + esc(item.slug) + '">' +
+            '<summary class="acc-sum">' +
+              '<span class="material-symbols-rounded acc-sum__icon" aria-hidden="true">' + esc(item.icon || "swords") + "</span>" +
+              '<span class="acc-sum__text"><b class="acc-sum__title">' + esc(t(item.title)) + "</b>" +
+              '<span class="acc-sum__desc">' + esc(t(item.summary)) + "</span></span>" +
+              '<span class="material-symbols-rounded acc-chevron" aria-hidden="true">expand_more</span>' +
+            "</summary>" +
+            '<div class="acc-body">' +
+              (tags ? '<div class="card__tags">' + tags + "</div>" : "") +
+              "<p>" + esc(t(item.overview)) + "</p>" +
+              (checks ? '<h4 class="acc-sub">' + esc(checksLabel) + "</h4><ul class=\"acc-list\">" + checks + "</ul>" : "") +
+            "</div></details>";
+        }
         function build() {
-          var rows = (p.items || []).filter(matches);
-          accEl.innerHTML = rows.map(function (item) {
-            var tags = (item.tags || []).slice(0, 5).map(function (g) { return '<span class="tag">' + esc(g) + "</span>"; }).join("");
-            var checks = (item.checks || []).map(function (c) { return "<li>" + esc(t(c)) + "</li>"; }).join("");
-            return '<details class="acc-item" data-item data-slug="' + esc(item.slug) + '">' +
-              '<summary class="acc-sum">' +
-                '<span class="material-symbols-rounded acc-sum__icon" aria-hidden="true">' + esc(item.icon || "swords") + "</span>" +
-                '<span class="acc-sum__text"><b class="acc-sum__title">' + esc(t(item.title)) + "</b>" +
-                '<span class="acc-sum__desc">' + esc(t(item.summary)) + "</span></span>" +
-                '<span class="material-symbols-rounded acc-chevron" aria-hidden="true">expand_more</span>' +
-              "</summary>" +
-              '<div class="acc-body">' +
-                (tags ? '<div class="card__tags">' + tags + "</div>" : "") +
-                "<p>" + esc(t(item.overview)) + "</p>" +
-                (checks ? '<h4 class="acc-sub">' + esc(checksLabel) + "</h4><ul class=\"acc-list\">" + checks + "</ul>" : "") +
-              "</div></details>";
+          var groups = (p.categories || []).filter(function (c) { return !st.cat || c.key === st.cat; });
+          var total = 0;
+          var html = groups.map(function (cat) {
+            var items = (p.items || []).filter(function (it) { return it.category === cat.key && matchesQ(it); });
+            total += items.length;
+            if (!items.length) return "";
+            return '<section class="acc-group reveal" data-item>' +
+              '<h3 class="acc-group__h"><span class="acc-group__name">' + esc(cat[lang()] || cat.en) + "</span>" +
+              '<span class="acc-group__count">' + items.length + "</span></h3>" +
+              '<div class="acc-rows">' + items.map(itemHTML).join("") + "</div></section>";
           }).join("");
-          if (count) count.textContent = rows.length + (lang() === "en" ? " class(es)" : " 個類別");
+          wrap.innerHTML = html || '<p class="empty">' + (lang() === "en" ? "No matches." : "沒有符合的項目。") + "</p>";
+          if (count) count.textContent = total + (lang() === "en" ? " class(es)" : " 個類別");
           wireToggles();
+          reveal(".acc-group");
         }
         function wireToggles() {
-          [].forEach.call(accEl.querySelectorAll(".acc-item"), function (d) {
+          [].forEach.call(wrap.querySelectorAll(".acc-item"), function (d) {
             d.addEventListener("toggle", function () {
               if (d.open) {
                 var slug = d.getAttribute("data-slug");
@@ -344,7 +391,7 @@
         function openFromHash() {
           var slug = location.hash.slice(1);
           if (!slug || !findItem(slug)) return;
-          var d = accEl.querySelector('.acc-item[data-slug="' + slug + '"]');
+          var d = wrap.querySelector('.acc-item[data-slug="' + slug + '"]');
           if (d) { d.open = true; d.scrollIntoView({ block: "center" }); }
         }
         if (search) search.addEventListener("input", function () { st.q = this.value.trim().toLowerCase(); build(); });
@@ -361,12 +408,11 @@
         teardowns.push(function () { window.removeEventListener("hashchange", onHash); });
         build();
         openFromHash();
-        reveal(".acc-item");
       },
 
       practice: function (p) {
         var panel = document.getElementById("practicePanel");
-        var btns = [].slice.call(pageEl.querySelectorAll(".seg__btn"));
+        var btns = [].slice.call(pageEl.querySelectorAll(".ltab"));
 
         function renderGlossary() {
           panel.innerHTML =
@@ -385,12 +431,9 @@
           var items = [].slice.call(panel.querySelectorAll(".glo"));
           if (s) s.addEventListener("input", function () {
             var q = this.value.trim().toLowerCase();
-            items.forEach(function (it) {
-              it.style.display = (!q || (it.dataset.hay || "").indexOf(q) !== -1) ? "" : "none";
-            });
+            items.forEach(function (it) { it.style.display = (!q || (it.dataset.hay || "").indexOf(q) !== -1) ? "" : "none"; });
           });
         }
-
         function renderFlashcards() {
           var hint = lang() === "en" ? "Tap a card to flip it." : "點卡片翻面。";
           panel.innerHTML = '<p class="block__note">' + esc(hint) + "</p>" +
@@ -409,7 +452,6 @@
             });
           });
         }
-
         function renderQuiz() {
           var quiz = p.quiz || [];
           var score = { right: 0, done: 0, total: quiz.length };
@@ -425,7 +467,6 @@
                 '<div class="qopts">' + opts + "</div>" +
                 '<p class="quiz-explain" id="qx' + qi + '" hidden></p></div>';
             }).join("") + "</div>";
-
           var scoreEl = document.getElementById("quizScore");
           function paintScore() {
             scoreEl.textContent = (lang() === "en"
@@ -459,12 +500,11 @@
             });
           });
         }
-
         function show(tab) {
           practiceTab = tab;
           btns.forEach(function (b) {
             var on = b.dataset.tab === tab;
-            b.classList.toggle("seg__btn--active", on);
+            b.classList.toggle("ltab--active", on);
             b.setAttribute("aria-selected", on ? "true" : "false");
           });
           if (tab === "flashcards") renderFlashcards();
@@ -476,9 +516,6 @@
       }
     };
 
-    /* =====================================================================
-       RENDER
-       ===================================================================== */
     function render() {
       teardowns.forEach(function (fn) { try { fn(); } catch (e) {} });
       teardowns = [];
