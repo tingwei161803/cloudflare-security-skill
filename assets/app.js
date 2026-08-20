@@ -2,7 +2,7 @@
    app.js — page-level rendering engine (vanilla, no build).
 
    Every page has its OWN distinct layout, each inspired by a different
-   reference from the lazy-data2web resource lists:
+   design reference:
      home       → landing bands + funnel chart   (Lapa Ninja / Land-book)
      pipeline   → horizontal flow diagram         (TimelineJS / process-flow)
      principles → editorial + severity ladder      (SiteInspire / data-viz)

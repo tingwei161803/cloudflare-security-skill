@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://cloudflare-security-skill.peteraim.com/sitemap.xml
