@@ -14,7 +14,7 @@
 (function () {
   "use strict";
 
-  var practiceTab = "glossary";   // survives a language-triggered repaint
+  var practiceTab = "glossary";   // which tab the practice page opens on
 
   function boot() {
     if (!window.LDW || !window.LDW.ready) {
@@ -528,7 +528,6 @@
       if (w) w(p);
     }
 
-    L.onLang(render);
     render();
   }
 
