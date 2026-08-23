@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="zh-Hant" data-theme="dark">
+<head>
+  <meta charset="UTF-8" />
+  <title>總覽 · Security Audit Skill</title>
+  <!-- Google tag (gtag.js) -->
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-RM0FBMMBLL"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag('js', new Date());
+    gtag('config', 'G-RM0FBMMBLL');
+  </script>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <meta name="description" content="Cloudflare 開源 agentic 資安稽核 skill 的互動式拆解。" />
+  <meta name="theme-color" content="#0A0C12" />
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='7' fill='%23FF8A3D'/><path d='M16 5 L25 8 V15 C25 21 21 25 16 27 C11 25 7 21 7 15 V8 Z' fill='%230A0C12'/><path d='M12.4 16 l2.5 2.5 L20 13.3' fill='none' stroke='%23FF8A3D' stroke-width='2.3' stroke-linecap='round' stroke-linejoin='round'/></svg>" />
+  <link rel="canonical" href="https://cloudflare-security-skill.peteraim.com/zh-Hant/" />
+  <link rel="alternate" hreflang="en" href="https://cloudflare-security-skill.peteraim.com/" />
+  <link rel="alternate" hreflang="zh-Hant" href="https://cloudflare-security-skill.peteraim.com/zh-Hant/" />
+  <link rel="alternate" hreflang="x-default" href="https://cloudflare-security-skill.peteraim.com/" />
+  <meta property="og:type" content="website" />
+  <meta property="og:site_name" content="Security Audit Skill" />
+  <meta property="og:title" content="總覽 · Security Audit Skill" />
+  <meta property="og:description" content="Cloudflare 開源 agentic 資安稽核 skill 的互動式拆解。" />
+  <meta property="og:url" content="https://cloudflare-security-skill.peteraim.com/zh-Hant/" />
+  <meta name="twitter:card" content="summary" />
+  <meta name="twitter:title" content="總覽 · Security Audit Skill" />
+  <meta name="twitter:description" content="Cloudflare 開源 agentic 資安稽核 skill 的互動式拆解。" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Roboto+Flex:opsz,wght@8..144,400..700&family=Noto+Sans+TC:wght@400;500;700&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@24,400,0,0&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="../assets/styles.css" />
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "WebSite",
+    "name": "Security Audit Skill",
+    "description": "Cloudflare 開源 agentic 資安稽核 skill 的互動式拆解。",
+    "url": "https://cloudflare-security-skill.peteraim.com/zh-Hant/"
+  }
+  </script>
+</head>
+<body data-page="home">
+  <!-- shell.js injects the app bar, cross-page nav, footer and dialog around this -->
+  <main id="page">
+<section class="hero" data-item=""><div class="terminal" aria-hidden="true"><span class="terminal__dot"></span><span class="terminal__dot"></span><span class="terminal__dot"></span><code class="terminal__cmd">$ security audit ./codebase<span class="terminal__caret"></span></code></div><h1 class="hero__title">把 coding agent 變成資安稽核員,只找「真的能被利用」的漏洞,不堆砌 checklist 雜訊。</h1><p class="hero__lede">security-audit 是一個與平台無關(agent-neutral)的 skill,透過六階段管線——偵察、獵捕、驗證、報告、結構化輸出、獨立複查——調度大量平行子代理,找出「有真實、可展示影響」的漏洞。它正是後來長成 Cloudflare 全機隊漏洞獵捕系統的開源種子。</p></section><div class="statbar"><div class="statbar__item" data-item=""><b class="statbar__value" data-count="6">6</b><span class="statbar__label">管線階段</span></div><div class="statbar__item" data-item=""><b class="statbar__value" data-count="9">9</b><span class="statbar__label">攻擊代理視角</span></div><div class="statbar__item" data-item=""><b class="statbar__value" data-count="12">12</b><span class="statbar__label">獵捕視角</span></div><div class="statbar__item" data-item=""><b class="statbar__value" data-count="~50%">~50%</b><span class="statbar__label">單次執行覆蓋率</span></div></div><h2 class="section-label"><span class="section-label__hash">//</span> 它在做什麼</h2><div class="fbands"><div class="fband reveal is-in" data-item=""><div class="fband__inner"><span class="material-symbols-rounded fband__icon" aria-hidden="true">bug_report</span><div class="fband__text"><h3 class="fband__title">能利用,而非空談</h3><p class="fband__body">每個發現都要有具體攻擊:攻擊者是誰、送出什麼、得到什麼。「攻擊者理論上可以……」不算發現。</p></div></div></div><div class="fband reveal fband--alt is-in" data-item=""><div class="fband__inner"><span class="material-symbols-rounded fband__icon" aria-hidden="true">balance</span><div class="fband__text"><h3 class="fband__title">對抗式設計</h3><p class="fband__body">找到 bug 的代理,絕不是驗證它的代理;再由第三個全新的代理對著原始碼複查每一項主張。偏誤被相互抵銷,而非被信任。</p></div></div></div><div class="fband reveal is-in" data-item=""><div class="fband__inner"><span class="material-symbols-rounded fband__icon" aria-hidden="true">layers</span><div class="fband__text"><h3 class="fband__title">嚴重度=影響</h3><p class="fband__body">嚴重度是「可能性 × 影響」,不是「偏離 OWASP 多少」。若另一層已擋住,那只是強化建議,不是漏洞。</p></div></div></div></div><section class="band reveal is-in" data-item="" aria-labelledby="lineageH"><h2 class="band__title" id="lineageH">從一個 skill 到一支機隊</h2><p class="band__body">Cloudflare 把這個單一 repo 的 skill 開源,作為其內部獵捕系統的起點。該系統後來長成一套兩階段、覆蓋全機隊的架構——漏洞發掘系統(VDH)+ 漏洞驗證系統(VVS)——掃描 128 個 repo。下方數字來自那套正式系統;本站介紹的 skill 即是它演化的地基。</p><div class="funnel" data-item=""><div class="funnel__h">20,799 個候選如何收斂成 7,245 筆發現</div><div class="funnel__row"><span class="funnel__label">原始候選</span><div class="funnel__track"><div class="funnel__bar" style="width:100%"><span class="funnel__val">20,799</span></div></div></div><div class="funnel__row"><span class="funnel__label">通過 VDH 驗證</span><div class="funnel__track"><div class="funnel__bar" style="width:58%"><span class="funnel__val">12,057</span></div></div></div><div class="funnel__row"><span class="funnel__label">最終可處理發現</span><div class="funnel__track"><div class="funnel__bar" style="width:35%"><span class="funnel__val">7,245</span></div></div></div></div><div class="metricbar"><div class="metricbar__item"><b class="metricbar__value">~450</b><span class="metricbar__label">原始 skill 行數</span></div><div class="metricbar__item"><b class="metricbar__value">128</b><span class="metricbar__label">機隊掃描 repo 數</span></div><div class="metricbar__item"><b class="metricbar__value">7,245</b><span class="metricbar__label">最終可處理發現數</span></div><div class="metricbar__item"><b class="metricbar__value">40→11%</b><span class="metricbar__label">誤報拒絕率變化</span></div></div><blockquote class="quote">「真正會留下來的是 harness。」模型是可替換的零件,編排才是耐久的資產。先從一個 skill 開始,把 prompt 調好,等到「缺了下一個架構階段」真的成為瓶頸時,再去建它。</blockquote></section><h2 class="section-label"><span class="section-label__hash">//</span> 逐章拆解</h2><nav class="idxlist" aria-label="逐章拆解"><a class="idxrow reveal is-in" data-item="" href="pipeline.html" aria-label="六階段管線"><span class="idxrow__n">01</span><span class="material-symbols-rounded idxrow__icon" aria-hidden="true">account_tree</span><span class="idxrow__text"><b>六階段管線</b><span>六個階段依序執行,把漏斗從「先看懂程式碼」一路收斂到「一筆經過複查、可被機器讀取的發現」。</span></span><span class="material-symbols-rounded idxrow__go" aria-hidden="true">arrow_forward</span></a><a class="idxrow reveal is-in" data-item="" href="principles.html" aria-label="原則與嚴重度"><span class="idxrow__n">02</span><span class="material-symbols-rounded idxrow__icon" aria-hidden="true">gavel</span><span class="idxrow__text"><b>原則與嚴重度</b><span>把「有用的稽核」和「checklist 大雜燴」區分開來的哲學——以及嚴重度到底怎麼判。</span></span><span class="material-symbols-rounded idxrow__go" aria-hidden="true">arrow_forward</span></a><a class="idxrow reveal is-in" data-item="" href="attacks.html" aria-label="攻擊類別"><span class="idxrow__n">03</span><span class="material-symbols-rounded idxrow__icon" aria-hidden="true">swords</span><span class="idxrow__text"><b>攻擊類別</b><span>第 2 階段把獵捕分配到這些視角。不是每個類別都適用每份程式碼——依偵察結果挑選。點卡片看每類在追什麼。</span></span><span class="material-symbols-rounded idxrow__go" aria-hidden="true">arrow_forward</span></a><a class="idxrow reveal is-in" data-item="" href="hunting.html" aria-label="獵捕視角"><span class="idxrow__n">04</span><span class="material-symbols-rounded idxrow__icon" aria-hidden="true">travel_explore</span><span class="idxrow__text"><b>獵捕視角</b><span>注入每個第 2 階段 prompt。以攻擊者而非審稿者思考——深讀程式碼,設法打破防禦,而不只是確認它存在。</span></span><span class="material-symbols-rounded idxrow__go" aria-hidden="true">arrow_forward</span></a><a class="idxrow reveal is-in" data-item="" href="schema.html" aria-label="結構化輸出"><span class="idxrow__n">05</span><span class="material-symbols-rounded idxrow__icon" aria-hidden="true">data_object</span><span class="idxrow__text"><b>結構化輸出</b><span>第 5 階段把每筆存活的發現轉成可被機器讀取的 JSON,符合 report-schema.json,並由零依賴的 Node 驗證器檢查。</span></span><span class="material-symbols-rounded idxrow__go" aria-hidden="true">arrow_forward</span></a><a class="idxrow reveal is-in" data-item="" href="practice.html" aria-label="練習場"><span class="idxrow__n">06</span><span class="material-symbols-rounded idxrow__icon" aria-hidden="true">school</span><span class="idxrow__text"><b>練習場</b><span>驗收一下。在可搜尋的術語表、翻卡與隨堂測驗之間切換。</span></span><span class="material-symbols-rounded idxrow__go" aria-hidden="true">arrow_forward</span></a></nav><section class="band band--muted reveal is-in" data-item="" aria-labelledby="srcH"><h2 class="band__title" id="srcH">資料來源</h2><p class="band__body">本站為獨立、非官方的整理。內容萃取自 skill 本身的檔案;正式系統數據引自 Cloudflare 工程部落格。與 Cloudflare 無隸屬關係。</p><div class="srclinks"><a class="srclink" href="https://github.com/cloudflare/security-audit-skill" target="_blank" rel="noopener"><span class="material-symbols-rounded" aria-hidden="true">open_in_new</span><span>Skill 原始碼(MIT)</span></a><a class="srclink" href="https://blog.cloudflare.com/build-your-own-vulnerability-harness" target="_blank" rel="noopener"><span class="material-symbols-rounded" aria-hidden="true">open_in_new</span><span>部落格:Build your own vulnerability harness</span></a></div></section>
+</main>
+
+  <script src="../data/data.js"></script>
+  <script src="../assets/shell.js"></script>
+  <script src="../assets/app.js"></script>
+<p class="lang-alt-link" style="text-align:center;padding:12px;"><a href="/" hreflang="en" rel="alternate" lang="en">English version</a></p>
+</body>
+</html>

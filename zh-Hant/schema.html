@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="zh-Hant" data-theme="dark">
+<head>
+  <meta charset="UTF-8" />
+  <title>結構化輸出 · Security Audit Skill</title>
+  <!-- Google tag (gtag.js) -->
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-RM0FBMMBLL"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag('js', new Date());
+    gtag('config', 'G-RM0FBMMBLL');
+  </script>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <meta name="description" content="第 5 階段把每筆存活的發現轉成可被機器讀取的 JSON,符合 report-schema.json,並由零依賴的 Node 驗證器檢查。" />
+  <meta name="theme-color" content="#0A0C12" />
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='7' fill='%23FF8A3D'/><path d='M16 5 L25 8 V15 C25 21 21 25 16 27 C11 25 7 21 7 15 V8 Z' fill='%230A0C12'/><path d='M12.4 16 l2.5 2.5 L20 13.3' fill='none' stroke='%23FF8A3D' stroke-width='2.3' stroke-linecap='round' stroke-linejoin='round'/></svg>" />
+  <link rel="canonical" href="https://cloudflare-security-skill.peteraim.com/zh-Hant/schema.html" />
+  <link rel="alternate" hreflang="en" href="https://cloudflare-security-skill.peteraim.com/schema.html" />
+  <link rel="alternate" hreflang="zh-Hant" href="https://cloudflare-security-skill.peteraim.com/zh-Hant/schema.html" />
+  <link rel="alternate" hreflang="x-default" href="https://cloudflare-security-skill.peteraim.com/schema.html" />
+  <meta property="og:type" content="article" />
+  <meta property="og:site_name" content="Security Audit Skill" />
+  <meta property="og:title" content="結構化輸出 · Security Audit Skill" />
+  <meta property="og:description" content="第 5 階段把每筆存活的發現轉成可被機器讀取的 JSON,符合 report-schema.json,並由零依賴的 Node 驗證器檢查。" />
+  <meta property="og:url" content="https://cloudflare-security-skill.peteraim.com/zh-Hant/schema.html" />
+  <meta name="twitter:card" content="summary" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Roboto+Flex:opsz,wght@8..144,400..700&family=Noto+Sans+TC:wght@400;500;700&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@24,400,0,0&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="../assets/styles.css" />
+</head>
+<body data-page="schema">
+  <main id="page">
+<header class="page-head"><div class="page-head__eyebrow"><span class="material-symbols-rounded" aria-hidden="true">data_object</span><span>結構化輸出</span></div><h1>結構化輸出</h1><p class="page-head__sub">第 5 階段把每筆存活的發現轉成可被機器讀取的 JSON,符合 report-schema.json,並由零依賴的 Node 驗證器檢查。</p></header><p class="lead reveal is-in" data-item="">schema 是一個 oneOf:一筆發現要嘛是 confirmed(完整 trace、執行與修補),要嘛是 rejected(調查後發現事實有誤)。各處都強制 additionalProperties:false。</p><section class="block" aria-labelledby="cfH"><h2 class="block__title" id="cfH"><span class="section-label__hash">//</span> Confirmed 發現——必填欄位</h2><div class="apiref"><nav class="apiref__index" aria-label="欄位"><span class="apiref__idxh">欄位</span><a class="apiref__link" href="#f-verdict"><code>verdict</code></a><a class="apiref__link" href="#f-title"><code>title</code></a><a class="apiref__link" href="#f-description"><code>description</code></a><a class="apiref__link" href="#f-root_cause"><code>root_cause</code></a><a class="apiref__link" href="#f-intended_behavior"><code>intended_behavior</code></a><a class="apiref__link" href="#f-trace"><code>trace</code></a><a class="apiref__link" href="#f-conditions"><code>conditions</code></a><a class="apiref__link" href="#f-execution"><code>execution</code></a><a class="apiref__link" href="#f-remediation"><code>remediation</code></a><a class="apiref__link" href="#f-severity"><code>severity</code></a><a class="apiref__link" href="#f-confidence"><code>confidence</code></a></nav><div class="apiref__main"><div class="fielddoc reveal is-in" id="f-verdict" data-item=""><div class="fielddoc__head"><code class="fielddoc__name">verdict</code><code class="fielddoc__type">const "confirmed"</code></div><p class="fielddoc__desc">標記為已驗證的漏洞。</p></div><div class="fielddoc reveal is-in" id="f-title" data-item=""><div class="fielddoc__head"><code class="fielddoc__name">title</code><code class="fielddoc__type">string</code></div><p class="fielddoc__desc">簡潔、標準的漏洞標題。</p></div><div class="fielddoc reveal is-in" id="f-description" data-item=""><div class="fielddoc__head"><code class="fielddoc__name">description</code><code class="fielddoc__type">string</code></div><p class="fielddoc__desc">完整說明,含 PoC 與觀察到的輸出。</p></div><div class="fielddoc reveal is-in" id="f-root_cause" data-item=""><div class="fielddoc__head"><code class="fielddoc__name">root_cause</code><code class="fielddoc__type">string</code></div><p class="fielddoc__desc">一句話:「[函式] 在 [檔案] 沒有做 [動作],導致 [後果]」。</p></div><div class="fielddoc reveal is-in" id="f-intended_behavior" data-item=""><div class="fielddoc__head"><code class="fielddoc__name">intended_behavior</code><code class="fielddoc__type">string</code></div><p class="fielddoc__desc">開發者原本想做的、非漏洞的邏輯。</p></div><div class="fielddoc reveal is-in" id="f-trace" data-item=""><div class="fielddoc__head"><code class="fielddoc__name">trace</code><code class="fielddoc__type">array (≥2)</code></div><p class="fielddoc__desc">從 entrypoint → … → sink 的循序步驟;每步 {kind,file,line,scope,description}。第一步須為 entrypoint、最後一步須為 sink。</p></div><div class="fielddoc reveal is-in" id="f-conditions" data-item=""><div class="fielddoc__head"><code class="fielddoc__name">conditions</code><code class="fielddoc__type">array</code></div><p class="fielddoc__desc">事實前提(認證等級、角色、設定、時序……)。預設即可利用則為空陣列。</p></div><div class="fielddoc reveal is-in" id="f-execution" data-item=""><div class="fielddoc__head"><code class="fielddoc__name">execution</code><code class="fielddoc__type">object</code></div><p class="fielddoc__desc">{attacker_perspective, payloads[], instructions[], expected_result}。</p></div><div class="fielddoc reveal is-in" id="f-remediation" data-item=""><div class="fielddoc__head"><code class="fielddoc__name">remediation</code><code class="fielddoc__type">object</code></div><p class="fielddoc__desc">{strategy, code_changes[]}——修補。</p></div><div class="fielddoc reveal is-in" id="f-severity" data-item=""><div class="fielddoc__head"><code class="fielddoc__name">severity</code><code class="fielddoc__type">object</code></div><p class="fielddoc__desc">{likelihood{score,reason}, impact{score,reason}, overall_severity}。</p></div><div class="fielddoc reveal is-in" id="f-confidence" data-item=""><div class="fielddoc__head"><code class="fielddoc__name">confidence</code><code class="fielddoc__type">object</code></div><p class="fielddoc__desc">{score, reason}——記下缺失檔案或模糊的資料流。</p></div></div></div></section><section class="block reveal is-in" aria-labelledby="rjH"><h2 class="block__title" id="rjH"><span class="section-label__hash">//</span> Rejected 發現</h2><div class="fieldcol"><div class="fielddoc reveal is-in" data-item=""><div class="fielddoc__head"><code class="fielddoc__name">verdict</code><code class="fielddoc__type">const "rejected"</code></div><p class="fielddoc__desc">所述行為事實錯誤,或該程式碼路徑不存在。</p></div><div class="fielddoc reveal is-in" data-item=""><div class="fielddoc__head"><code class="fielddoc__name">reason</code><code class="fielddoc__type">string</code></div><p class="fielddoc__desc">哪些具體主張錯了,附程式碼證據。</p></div></div></section><section class="block reveal is-in" aria-labelledby="exH"><h2 class="block__title" id="exH"><span class="section-label__hash">//</span> 一筆 confirmed 發現(節錄)</h2><div class="codewin" data-item=""><div class="codewin__bar" aria-hidden="true"><span class="terminal__dot"></span><span class="terminal__dot"></span><span class="terminal__dot"></span><span class="codewin__name">findings.json</span></div><pre class="codewin__body"><code>{
+  "verdict": "confirmed",
+  "title": "Stored XSS in comment rendering",
+  "root_cause": "renderComment in views/comment.js does not escape body, allowing script injection",
+  "trace": [
+    { "kind": "entrypoint", "file": "routes/comment.js", "line": 42,
+      "scope": "createComment", "description": "req.body.text stored unsanitized" },
+    { "kind": "sink", "file": "views/comment.js", "line": 17,
+      "scope": "renderComment", "description": "body interpolated into innerHTML" }
+  ],
+  "severity": {
+    "likelihood": { "score": "high", "reason": "any authenticated user can post" },
+    "impact":     { "score": "high", "reason": "fires for every viewer" },
+    "overall_severity": "high"
+  },
+  "confidence": { "score": "high", "reason": "trace verified against source" }
+}</code></pre></div></section><section class="callout reveal is-in" data-item=""><span class="material-symbols-rounded callout__icon" aria-hidden="true">verified</span><div><h3 class="callout__title">validate-findings.cjs</h3><p class="callout__body">一個零依賴的 Node 驗證器。它直接讀 report-schema.json,檢查必填欄位、enum 值、結構限制、additionalProperties,以及 trace 是否 entrypoint → sink。它只做結構檢查——確認 JSON 符合 schema,而非確認發現正確。事實查核是第 6 階段的工作。</p><div class="cmdline"><span class="cmdline__prompt">$</span><code>node validate-findings.cjs findings.json</code></div></div></section>
+</main>
+  <script src="../data/data.js"></script>
+  <script src="../assets/shell.js"></script>
+  <script src="../assets/app.js"></script>
+<p class="lang-alt-link" style="text-align:center;padding:12px;"><a href="/schema.html" hreflang="en" rel="alternate" lang="en">English version</a></p>
+</body>
+</html>

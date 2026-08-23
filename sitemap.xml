@@ -5,13 +5,13 @@
 -->
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   <url>
+    <loc>https://cloudflare-security-skill.peteraim.com/</loc>
+  </url>
+  <url>
     <loc>https://cloudflare-security-skill.peteraim.com/attacks.html</loc>
   </url>
   <url>
     <loc>https://cloudflare-security-skill.peteraim.com/hunting.html</loc>
-  </url>
-  <url>
-    <loc>https://cloudflare-security-skill.peteraim.com/</loc>
   </url>
   <url>
     <loc>https://cloudflare-security-skill.peteraim.com/pipeline.html</loc>
@@ -24,5 +24,26 @@
   </url>
   <url>
     <loc>https://cloudflare-security-skill.peteraim.com/schema.html</loc>
+  </url>
+  <url>
+    <loc>https://cloudflare-security-skill.peteraim.com/zh-Hant/</loc>
+  </url>
+  <url>
+    <loc>https://cloudflare-security-skill.peteraim.com/zh-Hant/attacks.html</loc>
+  </url>
+  <url>
+    <loc>https://cloudflare-security-skill.peteraim.com/zh-Hant/hunting.html</loc>
+  </url>
+  <url>
+    <loc>https://cloudflare-security-skill.peteraim.com/zh-Hant/pipeline.html</loc>
+  </url>
+  <url>
+    <loc>https://cloudflare-security-skill.peteraim.com/zh-Hant/practice.html</loc>
+  </url>
+  <url>
+    <loc>https://cloudflare-security-skill.peteraim.com/zh-Hant/principles.html</loc>
+  </url>
+  <url>
+    <loc>https://cloudflare-security-skill.peteraim.com/zh-Hant/schema.html</loc>
   </url>
 </urlset>

@@ -375,6 +375,10 @@ code,pre { font-family:var(--font-mono); }
 .footer__btn .material-symbols-rounded { font-size:18px; }
 @media (max-width:560px) { .footer__inner { flex-direction:column; align-items:flex-start; } }
 
+/* the other language, reachable without JavaScript */
+.lang-alt-link a { color:var(--on-surface-variant); font-size:.85rem; border-bottom:1px solid var(--outline-variant); }
+.lang-alt-link a:hover { color:var(--primary); border-bottom-color:var(--primary); }
+
 /* ---- Responsive ---- */
 @media (max-width:680px) {
   .step { grid-template-columns:40px 1fr; gap:13px; }
