@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="zh-Hant" data-theme="dark">
+<head>
+  <meta charset="UTF-8" />
+  <title>獵捕視角 · Security Audit Skill</title>
+  <!-- Google tag (gtag.js) -->
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-RM0FBMMBLL"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag('js', new Date());
+    gtag('config', 'G-RM0FBMMBLL');
+  </script>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <meta name="description" content="注入每個第 2 階段 prompt。以攻擊者而非審稿者思考——深讀程式碼,設法打破防禦,而不只是確認它存在。" />
+  <meta name="theme-color" content="#0A0C12" />
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='7' fill='%23FF8A3D'/><path d='M16 5 L25 8 V15 C25 21 21 25 16 27 C11 25 7 21 7 15 V8 Z' fill='%230A0C12'/><path d='M12.4 16 l2.5 2.5 L20 13.3' fill='none' stroke='%23FF8A3D' stroke-width='2.3' stroke-linecap='round' stroke-linejoin='round'/></svg>" />
+  <link rel="canonical" href="https://cloudflare-security-skill.peteraim.com/zh-Hant/hunting.html" />
+  <link rel="alternate" hreflang="en" href="https://cloudflare-security-skill.peteraim.com/hunting.html" />
+  <link rel="alternate" hreflang="zh-Hant" href="https://cloudflare-security-skill.peteraim.com/zh-Hant/hunting.html" />
+  <link rel="alternate" hreflang="x-default" href="https://cloudflare-security-skill.peteraim.com/hunting.html" />
+  <meta property="og:type" content="article" />
+  <meta property="og:site_name" content="Security Audit Skill" />
+  <meta property="og:title" content="獵捕視角 · Security Audit Skill" />
+  <meta property="og:description" content="注入每個第 2 階段 prompt。以攻擊者而非審稿者思考——深讀程式碼,設法打破防禦,而不只是確認它存在。" />
+  <meta property="og:url" content="https://cloudflare-security-skill.peteraim.com/zh-Hant/hunting.html" />
+  <meta name="twitter:card" content="summary" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Roboto+Flex:opsz,wght@8..144,400..700&family=Noto+Sans+TC:wght@400;500;700&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@24,400,0,0&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="../assets/styles.css" />
+</head>
+<body data-page="hunting">
+  <main id="page">
+<header class="page-head"><div class="page-head__eyebrow"><span class="material-symbols-rounded" aria-hidden="true">travel_explore</span><span>獵捕視角</span></div><h1>獵捕視角</h1><p class="page-head__sub">注入每個第 2 階段 prompt。以攻擊者而非審稿者思考——深讀程式碼,設法打破防禦,而不只是確認它存在。</p></header><p class="lead reveal is-in" data-item="">bug 住在各層之間的縫隙裡。跟著資料,從入口穿過驗證、轉換、儲存、取回到輸出。</p><div class="console" data-item=""><div class="console__bar" aria-hidden="true"><span class="terminal__dot"></span><span class="terminal__dot"></span><span class="terminal__dot"></span><span class="console__name">hunt --angles</span></div><div class="console__body"><div class="cline reveal is-in" data-item=""><span class="cline__prompt" aria-hidden="true">▸</span><span class="cline__n">1</span><div class="cline__text"><b class="cline__title">攻擊失敗路徑</b><p class="cline__body">成功路徑都防好了。錯誤處理、後備分支、catch、逾時、重試、清理——失敗的嚴謹度有跟成功一樣嗎?</p></div></div><div class="cline reveal is-in" data-item=""><span class="cline__prompt" aria-hidden="true">▸</span><span class="cline__n">2</span><div class="cline__text"><b class="cline__title">邊界會怎樣?</b><p class="cline__body">空值、最大長度、null vs undefined vs 缺漏、零、負數、unicode、第一項與最後一項、剛好超過上限、剛好卡在 rate limit、token 過期的那一刻。</p></div></div><div class="cline reveal is-in" data-item=""><span class="cline__prompt" aria-hidden="true">▸</span><span class="cline__n">3</span><div class="cline__text"><b class="cline__title">元件彼此假設了什麼?</b><p class="cline__body">資料庫層是否假設 API 已驗證?renderer 是否假設內容在寫入時已淨化?找出隱含信任之處,測試它是否站得住腳。</p></div></div><div class="cline reveal is-in" data-item=""><span class="cline__prompt" aria-hidden="true">▸</span><span class="cline__n">4</span><div class="cline__text"><b class="cline__title">順序錯亂的操作</b><p class="cline__body">在第 1 步前呼叫第 3 步。建立時刪除。沒啟動流程就打確認端點。重播一個已完成的流程。</p></div></div><div class="cline reveal is-in" data-item=""><span class="cline__prompt" aria-hidden="true">▸</span><span class="cline__n">5</span><div class="cline__text"><b class="cline__title">兩件事同時發生</b><p class="cline__body">對同一資源兩個請求。一邊讀一邊改。一邊迭代一邊刪。兩個使用者搶同一個唯一資源。</p></div></div><div class="cline reveal is-in" data-item=""><span class="cline__prompt" aria-hidden="true">▸</span><span class="cline__n">6</span><div class="cline__text"><b class="cline__title">parser 互相打架處</b><p class="cline__body">schema 收、資料庫卻拒。router 與應用對 URL 解讀不同。副檔名 vs MIME type vs magic bytes。</p></div></div><div class="cline reveal is-in" data-item=""><span class="cline__prompt" aria-hidden="true">▸</span><span class="cline__n">7</span><div class="cline__text"><b class="cline__title">什麼能撐過一次來回?</b><p class="cline__body">存了再取——還是同一個值嗎?編碼會變嗎、跳脫會疊加嗎、相對路徑在讀寫時解析不同嗎、序列化會掉型別資訊嗎?</p></div></div><div class="cline reveal is-in" data-item=""><span class="cline__prompt" aria-hidden="true">▸</span><span class="cline__n">8</span><div class="cline__text"><b class="cline__title">設定控制了什麼?</b><p class="cline__body">設定缺失或為預設時會怎樣?環境變數能否蓋掉安全控制?feature flag 會不會關掉驗證?首次設定(first-run)期間的安全姿態如何?</p></div></div><div class="cline reveal is-in" data-item=""><span class="cline__prompt" aria-hidden="true">▸</span><span class="cline__n">9</span><div class="cline__text"><b class="cline__title">跟著權限走</b><p class="cline__body">對每個狀態變更問:誰授權的?往回追到權限檢查。是「正確資源」上的「正確權限」嗎?有沒有平行路徑檢查方式不同——或根本不檢查?</p></div></div><div class="cline reveal is-in" data-item=""><span class="cline__prompt" aria-hidden="true">▸</span><span class="cline__n">10</span><div class="cline__text"><b class="cline__title">尋找洩漏的上下文</b><p class="cline__body">洩漏內部路徑的錯誤訊息。production 的 stack trace。能看出紀錄是否存在的時序差異。回應大小差異。揭露版本的 header。倖存的 debug 端點。</p></div></div><div class="cline reveal is-in" data-item=""><span class="cline__prompt" aria-hidden="true">▸</span><span class="cline__n">11</span><div class="cline__text"><b class="cline__title">蓋掉安全預設的參數</b><p class="cline__body">預設安全、但使用者參數能改掉它的地方。找出每個能蓋掉「安全相關預設」的輸入,確認這個覆寫有用對的權限把關。</p></div></div><div class="cline reveal is-in" data-item=""><span class="cline__prompt" aria-hidden="true">▸</span><span class="cline__n">12</span><div class="cline__text"><b class="cline__title">未驗證主張驅動信任</b><p class="cline__body">任何「自我宣稱的身分、能力或 metadata」在沒有獨立驗證下就影響了存取或信任決策的地方。</p></div></div></div></div><section class="block reveal is-in" aria-labelledby="rulesH"><h2 class="block__title" id="rulesH"><span class="section-label__hash">//</span> 驗證規則——回報「任何」發現之前</h2><ul class="cchecks"><li class="ccheck" data-item=""><span class="ccheck__box" aria-hidden="true">[<span class="ccheck__tick">✓</span>]</span><span>構造具體攻擊:確切的輸入、請求或動作序列。</span></li><li class="ccheck" data-item=""><span class="ccheck__box" aria-hidden="true">[<span class="ccheck__tick">✓</span>]</span><span>攻擊要達成有意義的影響——不是「知道欄位名稱」或「造成一個錯誤」。</span></li><li class="ccheck" data-item=""><span class="ccheck__box" aria-hidden="true">[<span class="ccheck__tick">✓</span>]</span><span>檢查是否已有另一層擋住利用。若有,那只是強化建議。</span></li><li class="ccheck" data-item=""><span class="ccheck__box" aria-hidden="true">[<span class="ccheck__tick">✓</span>]</span><span>若對照基準有相同模式,記下它在那邊是否被利用過。</span></li><li class="ccheck" data-item=""><span class="ccheck__box" aria-hidden="true">[<span class="ccheck__tick">✓</span>]</span><span>若利用依賴 parser/runtime 行為,要對照規格驗證——別憑直覺推論。</span></li><li class="ccheck" data-item=""><span class="ccheck__box" aria-hidden="true">[<span class="ccheck__tick">✓</span>]</span><span>只回報已確認的發現,否則誠實地回「未發現可利用漏洞」。</span></li></ul></section>
+</main>
+  <script src="../data/data.js"></script>
+  <script src="../assets/shell.js"></script>
+  <script src="../assets/app.js"></script>
+<p class="lang-alt-link" style="text-align:center;padding:12px;"><a href="/hunting.html" hreflang="en" rel="alternate" lang="en">English version</a></p>
+</body>
+</html>
