@@ -276,8 +276,10 @@
   /* =======================================================================
      INIT
      ===================================================================== */
-  /* live GitHub star count — cached per session; the number stays hidden
-     unless the API returns a real, positive count (offline / 403 / 0) */
+  /* live GitHub star count — read through shields.io, which caches GitHub's
+     answer and always replies 200 (no 403 noise in the console when the
+     GitHub API rate-limits). Cached per session; the number stays hidden
+     unless it is a real, positive count. */
   function fetchStars() {
     var el = document.getElementById("ghStar");
     var countEl = document.getElementById("ghStarCount");
@@ -285,22 +287,23 @@
     var repo = el.getAttribute("data-repo");
     if (!repo) return;
     var KEY = "ghstars:" + repo;
-    function show(n) {
-      if (typeof n !== "number" || !(n > 0)) return;
-      countEl.textContent = n >= 1000 ? (Math.round(n / 100) / 10) + "k" : String(n);
+    function show(v) {
+      v = String(v || "");
+      if (!/^\d+(\.\d+)?k?$/i.test(v) || /^0+(\.0+)?k?$/i.test(v)) return;
+      countEl.textContent = v;
       countEl.hidden = false;
       el.classList.add("gh-star--counted");
     }
     var cached = null;
     try { cached = sessionStorage.getItem(KEY); } catch (e) { /* ignore */ }
-    if (cached !== null) { show(parseInt(cached, 10)); return; }
+    if (cached !== null) { show(cached); return; }
     if (!window.fetch) return;
-    fetch("https://api.github.com/repos/" + repo, { headers: { Accept: "application/vnd.github+json" } })
+    fetch("https://img.shields.io/github/stars/" + repo + ".json")
       .then(function (r) { return r.ok ? r.json() : null; })
       .then(function (j) {
-        var n = j && typeof j.stargazers_count === "number" ? j.stargazers_count : 0;
-        try { sessionStorage.setItem(KEY, String(n)); } catch (e) { /* ignore */ }
-        show(n);
+        var v = j && j.message ? String(j.message) : "";
+        try { sessionStorage.setItem(KEY, v); } catch (e) { /* ignore */ }
+        show(v);
       })
       .catch(function () { /* leave the number hidden */ });
   }
