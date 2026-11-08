@@ -56,9 +56,16 @@
   }
 
   /* ---------- global state ---------- */
+  /* theme: a saved choice wins; otherwise follow the OS preference */
+  function preferredTheme() {
+    try {
+      if (window.matchMedia && window.matchMedia("(prefers-color-scheme: light)").matches) return "light";
+    } catch (e) { /* ignore */ }
+    return "dark";
+  }
   var state = {
     lang:  docLang(),
-    theme: lsGet("theme") || "dark"
+    theme: lsGet("theme") || preferredTheme()
   };
 
   /* ---------- helpers shared with app.js ---------- */
@@ -111,7 +118,7 @@
           '<a class="gh-star" id="ghStar" href="https://github.com/tingwei161803/cloudflare-security-skill" target="_blank" rel="noopener" data-repo="tingwei161803/cloudflare-security-skill">' +
             '<svg class="gh-star__mark" viewBox="0 0 16 16" width="16" height="16" aria-hidden="true"><path fill="currentColor" d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/></svg>' +
             '<span class="material-symbols-rounded gh-star__icon" aria-hidden="true">star</span>' +
-            '<span class="gh-star__count" id="ghStarCount">—</span>' +
+            '<span class="gh-star__count" id="ghStarCount" hidden></span>' +
           '</a>' +
           '<a class="icon-btn" id="langToggle" href="' + otherLangHref() + '" ' +
              'rel="alternate" hreflang="' + LANG_CODE[otherLang()] + '" ' +
@@ -150,6 +157,18 @@
         '</div>' +
       '</div>';
     main.parentNode.insertBefore(footer, main.nextSibling);
+
+    /* the static "other language" link sits after the scripts so it works
+       without JavaScript; with JavaScript it moves into the footer */
+    var alt = document.querySelector(".lang-alt-link");
+    var altA = alt && alt.querySelector("a");
+    if (altA) {
+      altA.className = "footer__btn footer__lang";
+      altA.innerHTML = '<span class="material-symbols-rounded" aria-hidden="true">translate</span><span>' +
+        escapeHtml(altA.textContent) + "</span>";
+      footer.querySelector(".footer__links").appendChild(altA);
+      alt.parentNode.removeChild(alt);
+    }
 
     /* shared detail dialog (used by card layouts) */
     var dialog = document.createElement("dialog");
@@ -211,7 +230,7 @@
     var homeTxt = document.getElementById("homeLinkTxt");
     if (homeTxt) homeTxt.textContent = state.lang === "zh" ? "回 peteraim.com 首頁" : "peteraim.com home";
     var homeLink = document.getElementById("homeLink");
-    if (homeLink) homeLink.setAttribute("aria-label", state.lang === "zh" ? "返回 peteraim.com 首頁(開新分頁)" : "Back to peteraim.com home (opens in new tab)");
+    if (homeLink) homeLink.setAttribute("aria-label", state.lang === "zh" ? "返回 peteraim.com 首頁（開新分頁）" : "Back to peteraim.com home (opens in new tab)");
     var skip = document.getElementById("skipLink");
     if (skip) skip.textContent = ui("skip");
     var nav = document.getElementById("pageNav");
@@ -230,12 +249,12 @@
     document.documentElement.setAttribute("data-theme", state.theme);
     var icon = document.getElementById("themeIcon");
     if (icon) icon.textContent = state.theme === "dark" ? "light_mode" : "dark_mode";
-    lsSet("theme", state.theme);
   }
 
   function wire() {
     document.getElementById("themeToggle").addEventListener("click", function () {
       state.theme = state.theme === "dark" ? "light" : "dark";
+      lsSet("theme", state.theme);   /* only an explicit choice is remembered */
       applyTheme();
     });
   }
@@ -257,22 +276,36 @@
   /* =======================================================================
      INIT
      ===================================================================== */
-  /* live GitHub star count (no auth; degrades silently offline / rate-limited) */
+  /* live GitHub star count — read through shields.io, which caches GitHub's
+     answer and always replies 200 (no 403 noise in the console when the
+     GitHub API rate-limits). Cached per session; the number stays hidden
+     unless it is a real, positive count. */
   function fetchStars() {
     var el = document.getElementById("ghStar");
     var countEl = document.getElementById("ghStarCount");
     if (!el || !countEl) return;
     var repo = el.getAttribute("data-repo");
     if (!repo) return;
-    fetch("https://api.github.com/repos/" + repo)
+    var KEY = "ghstars:" + repo;
+    function show(v) {
+      v = String(v || "");
+      if (!/^\d+(\.\d+)?k?$/i.test(v) || /^0+(\.0+)?k?$/i.test(v)) return;
+      countEl.textContent = v;
+      countEl.hidden = false;
+      el.classList.add("gh-star--counted");
+    }
+    var cached = null;
+    try { cached = sessionStorage.getItem(KEY); } catch (e) { /* ignore */ }
+    if (cached !== null) { show(cached); return; }
+    if (!window.fetch) return;
+    fetch("https://img.shields.io/github/stars/" + repo + ".json")
       .then(function (r) { return r.ok ? r.json() : null; })
       .then(function (j) {
-        if (j && typeof j.stargazers_count === "number") {
-          var n = j.stargazers_count;
-          countEl.textContent = n >= 1000 ? (Math.round(n / 100) / 10) + "k" : String(n);
-        }
+        var v = j && j.message ? String(j.message) : "";
+        try { sessionStorage.setItem(KEY, v); } catch (e) { /* ignore */ }
+        show(v);
       })
-      .catch(function () { /* keep the placeholder */ });
+      .catch(function () { /* leave the number hidden */ });
   }
 
   function init() {

@@ -3,7 +3,7 @@
 
    Every page has its OWN distinct layout, each inspired by a different
    design reference:
-     home       → landing bands + funnel chart   (Lapa Ninja / Land-book)
+     home       → split hero with a run-log console (6 phases + fleet funnel)
      pipeline   → horizontal flow diagram         (TimelineJS / process-flow)
      principles → editorial + severity ladder      (SiteInspire / data-viz)
      attacks    → category-grouped accordion       (HyperUI / Preline)
@@ -27,87 +27,97 @@
     var pageEl = document.getElementById("page");
     var teardowns = [];
 
+    /* chapter marker: the page's position in the guide (home is not a chapter) */
     function head(p) {
       var sub = t(p.subtitle)
         ? '<p class="page-head__sub">' + esc(t(p.subtitle)) + "</p>" : "";
-      return '<header class="page-head"><div class="page-head__eyebrow"><span class="material-symbols-rounded" aria-hidden="true">' +
-        esc(p.icon || "shield") + '</span><span>' + esc(t(p.title)) + "</span></div>" +
-        "<h1>" + esc(t(p.title)) + "</h1>" + sub + "</header>";
+      var chapters = L.pages.filter(function (q) { return q.slug !== "home"; });
+      var idx = chapters.indexOf(p);
+      var mark = idx >= 0
+        ? '<p class="page-head__mark"><span class="material-symbols-rounded" aria-hidden="true">' + esc(p.icon || "shield") + "</span>" +
+          '<span class="page-head__n">' + pad2(idx + 1) + '</span><span class="page-head__of">/ ' + pad2(chapters.length) + "</span></p>"
+        : "";
+      return '<header class="page-head">' + mark + "<h1>" + esc(t(p.title)) + "</h1>" + sub + "</header>";
     }
     function pad2(n) { return ("0" + n).slice(-2); }
     function commas(n) { return String(n).replace(/\B(?=(\d{3})+(?!\d))/g, ","); }
-    function reveal(selector) {
-      if (!("IntersectionObserver" in window)) {
-        [].forEach.call(pageEl.querySelectorAll(selector), function (el) { el.classList.add("is-in"); });
-        return;
-      }
-      var io = new IntersectionObserver(function (entries) {
-        entries.forEach(function (en) {
-          if (en.isIntersecting) { en.target.classList.add("is-in"); io.unobserve(en.target); }
-        });
-      }, { threshold: 0.1 });
-      [].forEach.call(pageEl.querySelectorAll(selector), function (el) { io.observe(el); });
-      teardowns.push(function () { io.disconnect(); });
-    }
-    function countUp(el) {
-      var raw = el.dataset.count || "";
-      if (!/^\d+$/.test(raw)) { el.textContent = raw; return; }
-      var target = parseInt(raw, 10), dur = 900, start = null;
-      function step(ts) {
-        if (start === null) start = ts;
-        var pr = Math.min(1, (ts - start) / dur), eased = 1 - Math.pow(1 - pr, 3);
-        el.textContent = String(Math.round(target * eased));
-        if (pr < 1) requestAnimationFrame(step); else el.textContent = String(target);
-      }
-      requestAnimationFrame(step);
-    }
-    function wireCounters() {
-      var els = [].slice.call(pageEl.querySelectorAll("[data-count]"));
-      if (!els.length) return;
-      if (!("IntersectionObserver" in window)) { els.forEach(countUp); return; }
-      var io = new IntersectionObserver(function (entries) {
-        entries.forEach(function (en) { if (en.isIntersecting) { countUp(en.target); io.unobserve(en.target); } });
-      }, { threshold: 0.5 });
-      els.forEach(function (el) { io.observe(el); });
-      teardowns.push(function () { io.disconnect(); });
+    /* the hero run-log plays once on load; everything else is simply there */
+    function playRunlog() {
+      var log = pageEl.querySelector(".runlog");
+      if (!log) return;
+      try {
+        if (window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+      } catch (e) { return; }
+      log.classList.add("is-live");
     }
 
     var RENDERERS = {
 
       /* ============ HOME — landing bands + funnel chart ============ */
       home: function (p) {
+        var en = lang() === "en";
         var stats = (p.stats || []).map(function (s) {
-          return '<div class="statbar__item" data-item>' +
-            '<b class="statbar__value" data-count="' + esc(String(s.value)) + '">' + esc(String(s.value)) + "</b>" +
-            '<span class="statbar__label">' + esc(t(s.label)) + "</span></div>";
+          return '<div class="readout__item" data-item>' +
+            '<b class="readout__value">' + esc(String(s.value)) + "</b>" +
+            '<span class="readout__label">' + esc(t(s.label)) + "</span></div>";
         }).join("");
 
-        var pitch = (p.pitch || []).map(function (c, i) {
-          return '<div class="fband reveal' + (i % 2 ? " fband--alt" : "") + '" data-item><div class="fband__inner">' +
-            '<span class="material-symbols-rounded fband__icon" aria-hidden="true">' + esc(c.icon) + "</span>" +
-            '<div class="fband__text"><h3 class="fband__title">' + esc(t(c.title)) + "</h3>" +
-            '<p class="fband__body">' + esc(t(c.body)) + "</p></div></div></div>";
+        var pitch = (p.pitch || []).map(function (c) {
+          return '<div class="tenet" data-item>' +
+            '<span class="material-symbols-rounded tenet__icon" aria-hidden="true">' + esc(c.icon) + "</span>" +
+            '<h3 class="tenet__title">' + esc(t(c.title)) + "</h3>" +
+            '<p class="tenet__body">' + esc(t(c.body)) + "</p></div>";
         }).join("");
-        var whatLabel = lang() === "en" ? "What it does" : "它在做什麼";
+        var whatLabel = en ? "What it does" : "它在做什麼";
 
         var lin = p.lineage || {};
         var metrics = (lin.metrics || []).map(function (m) {
           return '<div class="metricbar__item"><b class="metricbar__value">' + esc(String(m.value)) + "</b>" +
             '<span class="metricbar__label">' + esc(t(m.label)) + "</span></div>";
         }).join("");
+
+        /* ---- hero run-log: the six phases, then the fleet funnel ---- */
+        var pipe = L.pages.filter(function (q) { return q.slug === "pipeline"; })[0] || {};
+        var li = 0;
+        function line(cls, inner) {
+          return '<li class="log-line ' + cls + '" style="--i:' + (li++) + '">' + inner + "</li>";
+        }
+        var phaseLines = (pipe.phases || []).map(function (ph) {
+          return line("log-phase",
+            '<a class="log-phase__link" href="pipeline.html#stage-' + esc(ph.key) + '">' +
+              '<span class="log-n">' + esc(ph.n) + "</span>" +
+              '<span class="log-name">' + esc(t(ph.name)) + "</span>" +
+              '<span class="log-ok" aria-hidden="true">ok</span>' +
+              '<span class="log-meta">' + esc(t(ph.agents)) +
+                (ph.output ? ' <span class="log-out">' + esc(ph.output.replace(/^→\s*/, "")) + "</span>" : "") +
+              "</span></a>");
+        }).join("");
         var fn = lin.funnel || {};
-        var fmax = Math.max.apply(null, (fn.steps || []).map(function (s) { return s.value; }).concat([1]));
-        var funnel = (fn.steps && fn.steps.length) ? '<div class="funnel" data-item>' +
-          '<div class="funnel__h">' + esc(t(fn.heading)) + "</div>" +
-          fn.steps.map(function (s) {
-            var pct = Math.max(8, Math.round(s.value / fmax * 100));
-            return '<div class="funnel__row"><span class="funnel__label">' + esc(t(s.label)) + "</span>" +
-              '<div class="funnel__track"><div class="funnel__bar" style="width:' + pct + '%">' +
-              '<span class="funnel__val">' + commas(s.value) + "</span></div></div></div>";
-          }).join("") + "</div>" : "";
-        var lineage = '<section class="band reveal" data-item aria-labelledby="lineageH">' +
+        var fsteps = fn.steps || [];
+        var fmax = Math.max.apply(null, fsteps.map(function (s) { return s.value; }).concat([1]));
+        var funnelLines = fsteps.length
+          ? line("log-comment", "# " + esc(t(fn.heading))) +
+            fsteps.map(function (s) {
+              var pct = Math.max(6, Math.round(s.value / fmax * 100));
+              return line("log-bar",
+                '<span class="log-bar__label">' + esc(t(s.label)) + "</span>" +
+                '<span class="log-bar__val">' + commas(s.value) + "</span>" +
+                '<span class="log-bar__track" aria-hidden="true"><span class="log-bar__fill" style="--w:' + pct + '%"></span></span>');
+            }).join("") +
+            line("log-note", '<a href="#lineageH">' + esc(en ? "Cloudflare's fleet harness, 128 repos" : "Cloudflare 全機隊系統，128 個 repo") + "</a>")
+          : "";
+        var runlog = '<figure class="runlog" aria-label="' + esc(en ? "An audit run, phase by phase" : "一次稽核的執行紀錄") + '">' +
+          '<div class="runlog__bar" aria-hidden="true"><span class="terminal__dot"></span><span class="terminal__dot"></span><span class="terminal__dot"></span>' +
+            '<span class="runlog__name">audit-run.log</span></div>' +
+          '<ol class="runlog__body">' +
+            line("log-cmd", '<span class="log-cmd__text" style="--n:' + (p.command || "").length + '">' + esc(p.command || "") + "</span>") +
+            phaseLines + funnelLines +
+            line("log-cmd log-cmd--idle", '<span>$</span><span class="terminal__caret"></span>') +
+          "</ol></figure>";
+
+        var lineage = '<section class="band band--lineage" data-item aria-labelledby="lineageH">' +
           '<h2 class="band__title" id="lineageH">' + esc(t(lin.heading)) + "</h2>" +
-          '<p class="band__body">' + esc(t(lin.body)) + "</p>" + funnel +
+          '<p class="band__body">' + esc(t(lin.body)) + "</p>" +
           '<div class="metricbar">' + metrics + "</div>" +
           '<blockquote class="quote">' + esc(t(lin.quote)) + "</blockquote></section>";
 
@@ -117,30 +127,31 @@
             '<span class="material-symbols-rounded" aria-hidden="true">open_in_new</span>' +
             '<span>' + esc(t(a.label)) + "</span></a>";
         }).join("");
-        var sources = '<section class="band band--muted reveal" data-item aria-labelledby="srcH">' +
+        var sources = '<section class="band band--muted" data-item aria-labelledby="srcH">' +
           '<h2 class="band__title" id="srcH">' + esc(t(src.heading)) + "</h2>" +
           '<p class="band__body">' + esc(t(src.note)) + "</p>" +
           '<div class="srclinks">' + links + "</div></section>";
 
         var idx = L.pages.filter(function (q) { return q.slug !== "home"; }).map(function (q, i) {
-          return '<a class="idxrow reveal" data-item href="' + esc(L.pageHref(q)) + '" aria-label="' + esc(t(q.title)) + '">' +
+          return '<a class="idxrow" data-item href="' + esc(L.pageHref(q)) + '">' +
             '<span class="idxrow__n">' + pad2(i + 1) + "</span>" +
             '<span class="material-symbols-rounded idxrow__icon" aria-hidden="true">' + esc(q.icon || "label") + "</span>" +
-            '<span class="idxrow__text"><b>' + esc(t(q.title)) + "</b>" +
-            '<span>' + esc(t(q.subtitle)) + "</span></span>" +
+            '<b class="idxrow__title">' + esc(t(q.title)) + "</b>" +
+            '<span class="idxrow__desc">' + esc(t(q.subtitle)) + "</span>" +
             '<span class="material-symbols-rounded idxrow__go" aria-hidden="true">arrow_forward</span></a>';
         }).join("");
-        var exploreLabel = lang() === "en" ? "Explore the skill" : "逐章拆解";
+        var exploreLabel = en ? "Explore the skill" : "逐章拆解";
 
         return '<section class="hero" data-item>' +
-            '<div class="terminal" aria-hidden="true"><span class="terminal__dot"></span><span class="terminal__dot"></span><span class="terminal__dot"></span>' +
-              '<code class="terminal__cmd">' + esc(p.command || "") + '<span class="terminal__caret"></span></code></div>' +
-            '<h1 class="hero__title">' + esc(t(p.subtitle)) + "</h1>" +
-            '<p class="hero__lede">' + esc(t(p.lede)) + "</p>" +
+            '<div class="hero__copy">' +
+              '<p class="hero__cmd" aria-hidden="true"><span class="hero__prompt">$</span> ' + esc((p.command || "").replace(/^\$\s*/, "")) + "</p>" +
+              '<h1 class="hero__title">' + esc(t(p.subtitle)) + "</h1>" +
+              '<p class="hero__lede">' + esc(t(p.lede)) + "</p>" +
+            "</div>" + runlog +
           "</section>" +
-          '<div class="statbar">' + stats + "</div>" +
+          '<div class="readout">' + stats + "</div>" +
           '<h2 class="section-label"><span class="section-label__hash">//</span> ' + esc(whatLabel) + "</h2>" +
-          '<div class="fbands">' + pitch + "</div>" +
+          '<div class="tenets">' + pitch + "</div>" +
           lineage +
           '<h2 class="section-label"><span class="section-label__hash">//</span> ' + esc(exploreLabel) + "</h2>" +
           '<nav class="idxlist" aria-label="' + esc(exploreLabel) + '">' + idx + "</nav>" +
@@ -149,7 +160,7 @@
 
       /* ============ PIPELINE — horizontal flow diagram + stage blocks ============ */
       pipeline: function (p) {
-        var intro = t(p.intro) ? '<p class="lead reveal" data-item>' + esc(t(p.intro)) + "</p>" : "";
+        var intro = t(p.intro) ? '<p class="lead" data-item>' + esc(t(p.intro)) + "</p>" : "";
         var phases = p.phases || [];
         var flow = '<div class="flow" role="list" aria-label="pipeline">' + phases.map(function (ph, i) {
           var arrow = i < phases.length - 1 ? '<span class="flow__arrow material-symbols-rounded" aria-hidden="true">chevron_right</span>' : "";
@@ -160,7 +171,7 @@
 
         var stages = phases.map(function (ph) {
           var details = (ph.detail || []).map(function (d) { return "<li>" + esc(t(d)) + "</li>"; }).join("");
-          return '<section class="stage reveal" id="stage-' + esc(ph.key) + '" data-item>' +
+          return '<section class="stage" id="stage-' + esc(ph.key) + '" data-item>' +
             '<div class="stage__head"><span class="stage__num">' + esc(ph.n) + "</span>" +
               '<h3 class="stage__name">' + esc(t(ph.name)) + "</h3>" +
               '<span class="badge badge--agents"><span class="material-symbols-rounded" aria-hidden="true">smart_toy</span>' + esc(t(ph.agents)) + "</span></div>" +
@@ -170,7 +181,7 @@
         }).join("");
 
         var cov = p.coverage || {};
-        var coverage = '<section class="callout reveal" data-item>' +
+        var coverage = '<section class="callout" data-item>' +
           '<span class="material-symbols-rounded callout__icon" aria-hidden="true">replay</span>' +
           '<div><h3 class="callout__title">' + esc(t(cov.heading)) + "</h3>" +
           '<p class="callout__body">' + esc(t(cov.body)) + "</p></div></section>";
@@ -180,7 +191,7 @@
       /* ============ PRINCIPLES — editorial + severity ladder + anti-patterns ============ */
       principles: function (p) {
         var pr = (p.principles || []).map(function (c, i) {
-          return '<article class="pred reveal" data-item>' +
+          return '<article class="pred" data-item>' +
             '<span class="pred__num" aria-hidden="true">' + pad2(i + 1) + "</span>" +
             '<div class="pred__main">' +
               '<span class="material-symbols-rounded pred__icon" aria-hidden="true">' + esc(c.icon) + "</span>" +
@@ -196,19 +207,19 @@
             '<div class="sevl__bar" style="width:' + w + '%"><span class="sevl__tag">' + esc(t(lv.label)) + "</span></div>" +
             '<p class="sevl__body">' + esc(t(lv.body)) + "</p></div>";
         }).join("");
-        var severity = '<section class="block reveal" aria-labelledby="sevH">' +
+        var severity = '<section class="block" aria-labelledby="sevH">' +
           '<h2 class="block__title" id="sevH"><span class="section-label__hash">//</span> ' + esc(t(sev.heading)) + "</h2>" +
           '<p class="block__note">' + esc(t(sev.note)) + "</p>" +
           '<div class="sevladder">' + levels + "</div></section>";
 
         var ap = p.antipatterns || {};
         var aps = (ap.items || []).map(function (it) {
-          return '<li class="anti2 reveal" data-item>' +
+          return '<li class="anti2" data-item>' +
             '<span class="anti2__x material-symbols-rounded" aria-hidden="true">block</span>' +
             '<div class="anti2__text"><h3 class="anti2__title">' + esc(t(it.title)) + "</h3>" +
             '<p class="anti2__body">' + esc(t(it.body)) + "</p></div></li>";
         }).join("");
-        var anti = '<section class="block reveal" aria-labelledby="apH">' +
+        var anti = '<section class="block" aria-labelledby="apH">' +
           '<h2 class="block__title" id="apH"><span class="section-label__hash">//</span> ' + esc(t(ap.heading)) + "</h2>" +
           '<p class="block__note">' + esc(t(ap.note)) + "</p>" +
           '<ol class="anti2list">' + aps + "</ol></section>";
@@ -236,9 +247,9 @@
 
       /* ============ HUNTING — console transcript ============ */
       hunting: function (p) {
-        var intro = t(p.intro) ? '<p class="lead reveal" data-item>' + esc(t(p.intro)) + "</p>" : "";
+        var intro = t(p.intro) ? '<p class="lead" data-item>' + esc(t(p.intro)) + "</p>" : "";
         var lines = (p.angles || []).map(function (a) {
-          return '<div class="cline reveal" data-item>' +
+          return '<div class="cline" data-item>' +
             '<span class="cline__prompt" aria-hidden="true">▸</span>' +
             '<span class="cline__n">' + esc(a.n) + "</span>" +
             '<div class="cline__text"><b class="cline__title">' + esc(t(a.title)) + "</b>" +
@@ -254,7 +265,7 @@
           return '<li class="ccheck" data-item><span class="ccheck__box" aria-hidden="true">[<span class="ccheck__tick">✓</span>]</span>' +
             "<span>" + esc(t(it)) + "</span></li>";
         }).join("");
-        var rulesBlock = '<section class="block reveal" aria-labelledby="rulesH">' +
+        var rulesBlock = '<section class="block" aria-labelledby="rulesH">' +
           '<h2 class="block__title" id="rulesH"><span class="section-label__hash">//</span> ' + esc(t(rl.heading)) + "</h2>" +
           '<ul class="cchecks">' + rules + "</ul></section>";
         return head(p) + intro + con + rulesBlock;
@@ -262,13 +273,13 @@
 
       /* ============ SCHEMA — two-pane API reference ============ */
       schema: function (p) {
-        var intro = t(p.intro) ? '<p class="lead reveal" data-item>' + esc(t(p.intro)) + "</p>" : "";
+        var intro = t(p.intro) ? '<p class="lead" data-item>' + esc(t(p.intro)) + "</p>" : "";
         var conf = p.confirmed || {}, fields = conf.fields || [];
         var index = fields.map(function (f) {
           return '<a class="apiref__link" href="#f-' + esc(f.name) + '"><code>' + esc(f.name) + "</code></a>";
         }).join("");
         var docs = fields.map(function (f) {
-          return '<div class="fielddoc reveal" id="f-' + esc(f.name) + '" data-item>' +
+          return '<div class="fielddoc" id="f-' + esc(f.name) + '" data-item>' +
             '<div class="fielddoc__head"><code class="fielddoc__name">' + esc(f.name) + "</code>" +
             '<code class="fielddoc__type">' + esc(f.type) + "</code></div>" +
             '<p class="fielddoc__desc">' + esc(t(f.desc)) + "</p></div>";
@@ -281,22 +292,22 @@
 
         var rej = p.rejected || {};
         var rdocs = (rej.fields || []).map(function (f) {
-          return '<div class="fielddoc reveal" data-item><div class="fielddoc__head"><code class="fielddoc__name">' + esc(f.name) + "</code>" +
+          return '<div class="fielddoc" data-item><div class="fielddoc__head"><code class="fielddoc__name">' + esc(f.name) + "</code>" +
             '<code class="fielddoc__type">' + esc(f.type) + "</code></div>" +
             '<p class="fielddoc__desc">' + esc(t(f.desc)) + "</p></div>";
         }).join("");
-        var rejected = '<section class="block reveal" aria-labelledby="rjH">' +
+        var rejected = '<section class="block" aria-labelledby="rjH">' +
           '<h2 class="block__title" id="rjH"><span class="section-label__hash">//</span> ' + esc(t(rej.heading)) + "</h2>" +
           '<div class="fieldcol">' + rdocs + "</div></section>";
 
         var ex = p.example || {};
-        var example = '<section class="block reveal" aria-labelledby="exH">' +
+        var example = '<section class="block" aria-labelledby="exH">' +
           '<h2 class="block__title" id="exH"><span class="section-label__hash">//</span> ' + esc(t(ex.heading)) + "</h2>" +
           '<div class="codewin" data-item><div class="codewin__bar" aria-hidden="true"><span class="terminal__dot"></span><span class="terminal__dot"></span><span class="terminal__dot"></span><span class="codewin__name">findings.json</span></div>' +
           '<pre class="codewin__body"><code>' + esc(ex.code || "") + "</code></pre></div></section>";
 
         var v = p.validator || {};
-        var validator = '<section class="callout reveal" data-item>' +
+        var validator = '<section class="callout" data-item>' +
           '<span class="material-symbols-rounded callout__icon" aria-hidden="true">verified</span>' +
           '<div><h3 class="callout__title">' + esc(t(v.heading)) + "</h3>" +
           '<p class="callout__body">' + esc(t(v.body)) + "</p>" +
@@ -323,11 +334,7 @@
 
     /* ===================== WIRING ===================== */
     var WIRE = {
-      home: function () { wireCounters(); reveal(".reveal"); },
-      pipeline: function () { reveal(".reveal"); },
-      principles: function () { reveal(".reveal"); },
-      hunting: function () { reveal(".reveal"); },
-      schema: function () { reveal(".reveal"); },
+      home: function () { playRunlog(); },
 
       attacks: function (p) {
         var wrap = document.getElementById("accWrap");
@@ -368,7 +375,7 @@
             var items = (p.items || []).filter(function (it) { return it.category === cat.key && matchesQ(it); });
             total += items.length;
             if (!items.length) return "";
-            return '<section class="acc-group reveal" data-item>' +
+            return '<section class="acc-group" data-item>' +
               '<h3 class="acc-group__h"><span class="acc-group__name">' + esc(cat[lang()] || cat.en) + "</span>" +
               '<span class="acc-group__count">' + items.length + "</span></h3>" +
               '<div class="acc-rows">' + items.map(itemHTML).join("") + "</div></section>";
@@ -376,7 +383,6 @@
           wrap.innerHTML = html || '<p class="empty">' + (lang() === "en" ? "No matches." : "沒有符合的項目。") + "</p>";
           if (count) count.textContent = total + (lang() === "en" ? " class(es)" : " 個類別");
           wireToggles();
-          reveal(".acc-group");
         }
         function wireToggles() {
           [].forEach.call(wrap.querySelectorAll(".acc-item"), function (d) {
